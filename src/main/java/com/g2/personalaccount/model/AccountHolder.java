@@ -1,0 +1,44 @@
+package com.g2.personalaccount.model;
+
+import javax.persistence.Column;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+
+/**
+ * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
+ * @created 2019-10-30 18:03
+ */
+@Entity
+public class AccountHolder {
+  @Column(name = "first_name")
+  private String firstName;
+
+  @Column(name = "last_name")
+  private String lastName;
+
+  @Embedded private AccountHolderId accountHolderId;
+
+  public String getFirstName() {
+    return firstName;
+  }
+
+  public void setFirstName(String firstName) {
+    this.firstName = firstName;
+  }
+
+  public String getLastName() {
+    return lastName;
+  }
+
+  public void setLastName(String lastName) {
+    this.lastName = lastName;
+  }
+
+  public AccountHolderId getAccountHolderId() {
+    return accountHolderId;
+  }
+
+  public void setAccountHolderId(AccountHolderId accountHolderId) {
+    this.accountHolderId = accountHolderId;
+  }
+}
