@@ -1,4 +1,4 @@
-package com.unosquare.personalaccount;
+package com.g2.personalaccount;
 
 import org.junit.Test;
 

@@ -8,7 +8,7 @@
         <version>2.2.0.RELEASE</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.unosquare</groupId>
+    <groupId>com.g2</groupId>
     <artifactId>personal-account</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>personal-account</name>
@@ -48,6 +48,10 @@
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web-services</artifactId>
         </dependency>
         <!-- End Spring -->
 
