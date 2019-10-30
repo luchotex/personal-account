@@ -9,5 +9,7 @@ import org.junit.Test;
 public class TestCI {
 
   @Test
-  public void test() {}
+  public void test() {
+    
+  }
 }
