@@ -9,10 +9,12 @@ jobs:
       - run:
           name: Analyze on SonarCloud
           command: mvn verify sonar:sonar -Dsonar.projectKey=luchotex_personal-account -Dsonar.organization=unosquarelk -Dsonar.host.url=https://sonarcloud.io
+          environment:
+              JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
       - store_test_results:
-          path: ~/test-results
+          path: reports/junit
       - store_artifacts:
-          path: ~/test-results/junit
+          path: reports/junit
 
 
 workflows:
