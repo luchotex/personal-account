@@ -14,9 +14,9 @@ jobs:
       - run:
           shell: /bin/bash
           command: |
-              mkdir -p test-results
+              mkdir -p test-results/junit
       - store_test_results:
-          path: test-results
+          path: test-results/junit
 
 workflows:
   main:
