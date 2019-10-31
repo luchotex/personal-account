@@ -9,12 +9,12 @@ jobs:
       - run:
           name: Analyze on SonarCloud
           command:
-            -mvn verify sonar:sonar -Dsonar.projectKey=luchotex_personal-account -Dsonar.organization=unosquarelk -Dsonar.host.url=https://sonarcloud.io
+              mvn verify sonar:sonar -Dsonar.projectKey=luchotex_personal-account -Dsonar.organization=unosquarelk -Dsonar.host.url=https://sonarcloud.io
 
       - run:
           shell: /bin/bash
           command: |
-            mkdir -p test-results
+              mkdir -p test-results
       - store_test_results:
           path: test-results
 
