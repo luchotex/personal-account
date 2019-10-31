@@ -1,5 +1,6 @@
 package com.g2.personalaccount.controllers;
 
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -7,4 +8,5 @@ import org.springframework.web.bind.annotation.RestController;
  * @created 2019-10-30 17:41
  */
 @RestController
+@RequestMapping(value = "/accounts")
 public class AccountController {}
