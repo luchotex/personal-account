@@ -4,11 +4,11 @@ import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
-import javax.persistence.SequenceGenerator;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
 
 /**
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
@@ -18,11 +18,11 @@ import javax.persistence.SequenceGenerator;
 public class Account extends EditionDates {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_generator")
-  @SequenceGenerator(
-      name = "account_generator",
-      sequenceName = "account_id_seq",
-      allocationSize = 1)
+  @GeneratedValue(generator = "number")
+  @GenericGenerator(
+      name = "account-number-generator",
+      parameters = @Parameter(name = "prefix", value = "35"),
+      strategy = "com.g2.personalaccount.model.generator.AccountNumberGenerator")
   @Column(name = "account_id")
   private Long id;
 
