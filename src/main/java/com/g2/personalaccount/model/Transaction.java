@@ -25,10 +25,13 @@ public class Transaction extends EditionDates {
   @Column(name = "transaction_id")
   private Long id;
 
-  private TypeEnum typeEnum;
+  @Column(name = "type")
+  private TypeEnum type;
 
+  @Column(name = "amount")
   private BigDecimal amount;
 
+  @Column(name = "description")
   private String description;
 
   public Long getId() {
@@ -39,12 +42,12 @@ public class Transaction extends EditionDates {
     this.id = id;
   }
 
-  public TypeEnum getTypeEnum() {
-    return typeEnum;
+  public TypeEnum getType() {
+    return type;
   }
 
-  public void setTypeEnum(TypeEnum typeEnum) {
-    this.typeEnum = typeEnum;
+  public void setType(TypeEnum type) {
+    this.type = type;
   }
 
   public BigDecimal getAmount() {

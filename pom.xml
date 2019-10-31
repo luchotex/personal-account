@@ -23,6 +23,8 @@
         <google-formatter.version>1.6</google-formatter.version>
         <liquibase-hibernate5.version>3.6</liquibase-hibernate5.version>
         <mockito.version>1.8.4</mockito.version>
+        <logstash.version>5.3</logstash.version>
+        <commons-lang.version>2.6</commons-lang.version>
         <sonar-maven-plugin.version>3.6.0.1398</sonar-maven-plugin.version>
         <sonar.projectKey>personal-account</sonar.projectKey>
         <sonar.projectName>Personal Account Service</sonar.projectName>
@@ -88,7 +90,7 @@
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
-            <version>5.3</version>
+            <version>${logstash.version}</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -98,6 +100,11 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-access</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
         </dependency>
         <dependency>
@@ -128,7 +135,7 @@
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
-            <version>2.6</version>
+            <version>${commons-lang.version}</version>
         </dependency>
         <!-- End Tools -->
 

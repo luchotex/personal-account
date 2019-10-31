@@ -1,5 +1,6 @@
 package com.g2.personalaccount.model;
 
+import com.g2.personalaccount.model.enumerated.StatusEnum;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -32,6 +33,9 @@ public class Account extends EditionDates {
   @JoinColumn(name = "account_access_id", referencedColumnName = "account_access_id")
   private AccountAccess accountAccess;
 
+  @Column(name = "status")
+  private StatusEnum status;
+
   public Long getId() {
     return id;
   }
@@ -54,5 +58,13 @@ public class Account extends EditionDates {
 
   public void setAccountAccess(AccountAccess accountAccess) {
     this.accountAccess = accountAccess;
+  }
+
+  public StatusEnum getStatus() {
+    return status;
+  }
+
+  public void setStatus(StatusEnum status) {
+    this.status = status;
   }
 }
