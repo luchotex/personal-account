@@ -1,14 +1,14 @@
 package com.g2.personalaccount.model;
 
 import javax.persistence.Column;
+import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
-import javax.persistence.Entity;
 
 /**
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
  * @created 2019-10-30 18:03
  */
-@Entity
+@Embeddable
 public class AccountHolder {
   @Column(name = "first_name")
   private String firstName;
