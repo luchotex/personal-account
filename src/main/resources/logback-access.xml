@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="ACCESS-STASH"
+        class="net.logstash.logback.appender.LogstashAccessTcpSocketAppender">
+        <destination>${LOGSTASH_SERVER}:5000</destination>
+        <!-- encoder is required -->
+        <encoder class="net.logstash.logback.encoder.LogstashAccessEncoder">
+            <customFields>{"service":"personal-account", "logType": "access"}</customFields>
+        </encoder>
+    </appender>
+    <appender-ref ref="ACCESS-STASH"/>
+
+</configuration>
