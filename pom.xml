@@ -25,6 +25,7 @@
         <mockito.version>1.8.4</mockito.version>
         <logstash.version>5.3</logstash.version>
         <commons-lang.version>2.6</commons-lang.version>
+        <commons-codec.version>1.12</commons-codec.version>
         <sonar-maven-plugin.version>3.6.0.1398</sonar-maven-plugin.version>
         <sonar.projectKey>personal-account</sonar.projectKey>
         <sonar.projectName>Personal Account Service</sonar.projectName>
@@ -137,6 +138,11 @@
             <artifactId>commons-lang</artifactId>
             <version>${commons-lang.version}</version>
         </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>${commons-codec.version}</version>
+        </dependency>
         <!-- End Tools -->
 
         <!-- Test -->
@@ -160,6 +166,27 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.7.0</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${mapstruct.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                    <compilerArgs>
+                        <arg>-Amapstruct.suppressGeneratorTimestamp=true</arg>
+                        <arg>-Amapstruct.defaultComponentModel=spring</arg>
+                    </compilerArgs>
+                </configuration>
             </plugin>
 
             <plugin>

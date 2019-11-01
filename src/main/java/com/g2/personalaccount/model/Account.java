@@ -1,6 +1,7 @@
 package com.g2.personalaccount.model;
 
 import com.g2.personalaccount.model.enumerated.StatusEnum;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -19,7 +20,7 @@ import org.hibernate.annotations.Parameter;
 public class Account extends EditionDates {
 
   @Id
-  @GeneratedValue(generator = "number")
+  @GeneratedValue(generator = "account-number-generator")
   @GenericGenerator(
       name = "account-number-generator",
       parameters = @Parameter(name = "prefix", value = "35"),
@@ -29,7 +30,7 @@ public class Account extends EditionDates {
 
   @Embedded private AccountHolder accountHolder;
 
-  @OneToOne
+  @OneToOne(cascade = CascadeType.PERSIST)
   @JoinColumn(name = "account_access_id", referencedColumnName = "account_access_id")
   private AccountAccess accountAccess;
 
