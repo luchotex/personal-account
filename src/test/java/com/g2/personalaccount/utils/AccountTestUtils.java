@@ -32,7 +32,6 @@ public class AccountTestUtils {
     request.setHolderFirstName("Test first Name update");
     request.setHolderLastName("Test last Name update");
     request.setEmail("emaiupdatedl@test.com");
-    request.setSsn(1233244255L);
     request.setVoterCardId(1233244255L);
 
     return request;
@@ -74,7 +73,6 @@ public class AccountTestUtils {
     accountHolder.setEmail(accountRequest.getEmail());
 
     AccountHolderId accountHolderId = new AccountHolderId();
-    accountHolderId.setSsn(accountRequest.getSsn());
     accountHolderId.setVoterCardId(accountRequest.getVoterCardId());
     accountHolder.setAccountHolderId(accountHolderId);
 

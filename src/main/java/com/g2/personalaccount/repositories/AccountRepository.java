@@ -1,6 +1,7 @@
 package com.g2.personalaccount.repositories;
 
 import com.g2.personalaccount.model.Account;
+import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,4 +10,9 @@ import org.springframework.stereotype.Repository;
  * @created 2019-10-30 19:47
  */
 @Repository
-public interface AccountRepository extends CrudRepository<Account, Long> {}
+public interface AccountRepository extends CrudRepository<Account, Long> {
+
+  Optional<Account> findByAccountHolder_AccountHolderId_Ssn(Long ssn);
+
+  Optional<Account> findByAccountHolder_Email(String email);
+}

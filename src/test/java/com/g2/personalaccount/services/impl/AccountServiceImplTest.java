@@ -12,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.g2.personalaccount.config.ServiceConfig;
 import com.g2.personalaccount.dto.mappers.AccountMapper;
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
@@ -54,12 +55,17 @@ public class AccountServiceImplTest {
   @Autowired private AccountMapper accountMapper;
   @MockBean private EmailProxy emailProxy;
   private PinGenerator pinGenerator;
+  private ServiceConfig serviceConfig;
 
   @Before
   public void setUp() {
     pinGenerator = new PinGenerator();
+    serviceConfig = new ServiceConfig();
+    serviceConfig.setHostname("hostname");
+    serviceConfig.setExpirationSeconds("1000");
     accountService =
-        new AccountServiceImpl(accountMapper, accountRepository, emailProxy, pinGenerator);
+        new AccountServiceImpl(
+            accountMapper, accountRepository, emailProxy, pinGenerator, serviceConfig);
   }
 
   @Test
@@ -98,7 +104,7 @@ public class AccountServiceImplTest {
     assertEquals(
         request.getVoterCardId(),
         savingValue.getAccountHolder().getAccountHolderId().getVoterCardId());
-    assertEquals(StatusEnum.ACTIVE, savingValue.getStatus());
+    assertEquals(StatusEnum.ON_CONFIRM, savingValue.getStatus());
 
     assertNull(savingValue.getCreateDateTime());
     assertNull(savingValue.getUpdateDateTime());
@@ -158,7 +164,6 @@ public class AccountServiceImplTest {
     assertEquals(request.getHolderLastName(), savingValue.getAccountHolder().getLastName());
     assertEquals(request.getEmail(), savingValue.getAccountHolder().getEmail());
 
-    assertEquals(request.getSsn(), savingValue.getAccountHolder().getAccountHolderId().getSsn());
     assertEquals(
         request.getVoterCardId(),
         savingValue.getAccountHolder().getAccountHolderId().getVoterCardId());

@@ -14,6 +14,6 @@ public class AccountResponse {
   private String holderFirstName;
   private String holderLastName;
   private String email;
-  private Integer ssn;
-  private Integer voterCardId;
+  private Long ssn;
+  private Long voterCardId;
 }

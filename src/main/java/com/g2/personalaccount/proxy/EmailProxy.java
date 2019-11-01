@@ -21,6 +21,16 @@ public class EmailProxy {
         String.format("G2 Bank Pin Notification %nYour pin is %s", pin));
   }
 
+  public void sendConfirmation(String toEmail, String url, String confirmId) {
+
+    sendEmail(
+        toEmail,
+        "IMPORTANT: Account creation confirmation",
+        String.format(
+            "G2 Bank Pin confirm your creation in the following URL: %s/creation-confirmation/%s",
+            url, confirmId));
+  }
+
   public void sendEmail(String toEmail, String subject, String content) {
 
     SimpleMailMessage msg = new SimpleMailMessage();

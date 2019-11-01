@@ -1,7 +1,10 @@
 package com.g2.personalaccount.dto.requests;
 
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Positive;
 import lombok.Data;
 
 /**
@@ -16,19 +19,23 @@ public class AccountUpdateRequest {
 
   @NotNull(message = "The First name must have a value")
   @NotEmpty(message = "The First name musn't be empty value")
+  @Pattern(
+      regexp = "[A-Za-z ]*",
+      message = "The first name must contain only characters or letters")
   private String holderFirstName;
 
   @NotNull(message = "The Last name must have a value")
   @NotEmpty(message = "The last name musn't be empty value")
+  @Pattern(regexp = "[A-Za-z ]*", message = "The last name must contain only characters or letters")
   private String holderLastName;
 
   @NotNull(message = "The email must have a value")
   @NotEmpty(message = "The email musn't be empty value")
+  @Email(message = "Email must have valid format")
   private String email;
 
-  @NotNull(message = "The ssn must have a value")
-  private Long ssn;
-
   @NotNull(message = "The Voter card Id must have a value")
+  @Positive(message = "The voter card id cannot be a negative value")
+  // TODO validate this format
   private Long voterCardId;
 }

@@ -36,6 +36,10 @@ public class Account extends EditionDates {
   @JoinColumn(name = "account_access_id", referencedColumnName = "account_access_id")
   private AccountAccess accountAccess;
 
+  @OneToOne(cascade = CascadeType.PERSIST)
+  @JoinColumn(name = "account_confirmation_id", referencedColumnName = "account_confirmation_id")
+  private AccountConfirmation accountConfirmation;
+
   @Column(name = "status")
   private StatusEnum status;
 }
