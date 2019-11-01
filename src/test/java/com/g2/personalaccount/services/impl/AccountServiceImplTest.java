@@ -34,6 +34,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+/** This Kind of test was necessary due to using of decorators, so we need to autowire the mapper */
 @ActiveProfiles("dev")
 @RunWith(SpringRunner.class)
 @SpringBootTest(

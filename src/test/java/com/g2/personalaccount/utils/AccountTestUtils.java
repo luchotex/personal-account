@@ -55,6 +55,9 @@ public class AccountTestUtils {
 
     account.setAccountHolder(accountHolder);
 
+    AccountAccess accountAccess = new AccountAccess();
+    account.setAccountAccess(accountAccess);
+
     return account;
   }
 
