@@ -8,12 +8,14 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
+import lombok.Data;
 
 /**
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
  * @created 2019-10-30 18:04
  */
 @Entity
+@Data
 public class Transaction extends EditionDates {
 
   @Id
@@ -33,36 +35,4 @@ public class Transaction extends EditionDates {
 
   @Column(name = "description")
   private String description;
-
-  public Long getId() {
-    return id;
-  }
-
-  public void setId(Long id) {
-    this.id = id;
-  }
-
-  public TypeEnum getType() {
-    return type;
-  }
-
-  public void setType(TypeEnum type) {
-    this.type = type;
-  }
-
-  public BigDecimal getAmount() {
-    return amount;
-  }
-
-  public void setAmount(BigDecimal amount) {
-    this.amount = amount;
-  }
-
-  public String getDescription() {
-    return description;
-  }
-
-  public void setDescription(String description) {
-    this.description = description;
-  }
 }

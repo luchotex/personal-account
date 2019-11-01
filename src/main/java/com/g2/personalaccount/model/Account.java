@@ -9,6 +9,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
+import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 
@@ -17,6 +18,7 @@ import org.hibernate.annotations.Parameter;
  * @created 2019-10-30 18:03
  */
 @Entity
+@Data
 public class Account extends EditionDates {
 
   @Id
@@ -36,36 +38,4 @@ public class Account extends EditionDates {
 
   @Column(name = "status")
   private StatusEnum status;
-
-  public Long getId() {
-    return id;
-  }
-
-  public void setId(Long id) {
-    this.id = id;
-  }
-
-  public AccountHolder getAccountHolder() {
-    return accountHolder;
-  }
-
-  public void setAccountHolder(AccountHolder accountHolder) {
-    this.accountHolder = accountHolder;
-  }
-
-  public AccountAccess getAccountAccess() {
-    return accountAccess;
-  }
-
-  public void setAccountAccess(AccountAccess accountAccess) {
-    this.accountAccess = accountAccess;
-  }
-
-  public StatusEnum getStatus() {
-    return status;
-  }
-
-  public void setStatus(StatusEnum status) {
-    this.status = status;
-  }
 }

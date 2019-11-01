@@ -7,12 +7,14 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
+import lombok.Data;
 
 /**
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
  * @created 2019-10-30 19:03
  */
 @Entity
+@Data
 public class AccountAccess extends EditionDates {
 
   @Id
@@ -27,29 +29,6 @@ public class AccountAccess extends EditionDates {
   @OneToOne(mappedBy = "accountAccess")
   private Account account;
 
-  @Column private String pin;
-
-  public Long getId() {
-    return id;
-  }
-
-  public void setId(Long id) {
-    this.id = id;
-  }
-
-  public Account getAccount() {
-    return account;
-  }
-
-  public void setAccount(Account account) {
-    this.account = account;
-  }
-
-  public String getPin() {
-    return pin;
-  }
-
-  public void setPin(String pin) {
-    this.pin = pin;
-  }
+  @Column(name = "pin")
+  private String pin;
 }

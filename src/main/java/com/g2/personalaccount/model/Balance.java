@@ -7,12 +7,14 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
+import lombok.Data;
 
 /**
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
  * @created 2019-10-30 18:03
  */
 @Entity
+@Data
 public class Balance extends EditionDates {
 
   // TODO to be defined in future issue
@@ -28,20 +30,4 @@ public class Balance extends EditionDates {
 
   @Column(name = "amount")
   private BigDecimal amount;
-
-  public Long getId() {
-    return id;
-  }
-
-  public void setId(Long id) {
-    this.id = id;
-  }
-
-  public BigDecimal getAmount() {
-    return amount;
-  }
-
-  public void setAmount(BigDecimal amount) {
-    this.amount = amount;
-  }
 }

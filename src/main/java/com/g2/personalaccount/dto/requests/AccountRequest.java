@@ -2,11 +2,13 @@ package com.g2.personalaccount.dto.requests;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import lombok.Data;
 
 /**
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
  * @created 2019-10-31 16:21
  */
+@Data
 public class AccountRequest {
 
   @NotNull(message = "The First name must have a value")
@@ -18,52 +20,12 @@ public class AccountRequest {
   private String holderLastName;
 
   @NotNull(message = "The email must have a value")
-  @NotNull(message = "The email musn't be empty value")
+  @NotEmpty(message = "The email musn't be empty value")
   private String email;
 
   @NotNull(message = "The ssn must have a value")
-  private Integer ssn;
+  private Long ssn;
 
   @NotNull(message = "The Voter card Id must have a value")
-  private Integer voterCardId;
-
-  public String getHolderFirstName() {
-    return holderFirstName;
-  }
-
-  public void setHolderFirstName(String holderFirstName) {
-    this.holderFirstName = holderFirstName;
-  }
-
-  public String getHolderLastName() {
-    return holderLastName;
-  }
-
-  public void setHolderLastName(String holderLastName) {
-    this.holderLastName = holderLastName;
-  }
-
-  public String getEmail() {
-    return email;
-  }
-
-  public void setEmail(String email) {
-    this.email = email;
-  }
-
-  public Integer getSsn() {
-    return ssn;
-  }
-
-  public void setSsn(Integer ssn) {
-    this.ssn = ssn;
-  }
-
-  public Integer getVoterCardId() {
-    return voterCardId;
-  }
-
-  public void setVoterCardId(Integer voterCardId) {
-    this.voterCardId = voterCardId;
-  }
+  private Long voterCardId;
 }

@@ -20,8 +20,8 @@ public class AccountTestUtils {
     request.setHolderFirstName("Test first Name");
     request.setHolderLastName("Test last Name");
     request.setEmail("email@test.com");
-    request.setSsn(12332442);
-    request.setVoterCardId(12332442);
+    request.setSsn(12332442L);
+    request.setVoterCardId(12332442L);
 
     return request;
   }
@@ -32,8 +32,8 @@ public class AccountTestUtils {
     request.setHolderFirstName("Test first Name update");
     request.setHolderLastName("Test last Name update");
     request.setEmail("emaiupdatedl@test.com");
-    request.setSsn(1233244255);
-    request.setVoterCardId(1233244255);
+    request.setSsn(1233244255L);
+    request.setVoterCardId(1233244255L);
 
     return request;
   }

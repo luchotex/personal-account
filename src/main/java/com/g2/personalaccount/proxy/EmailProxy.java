@@ -18,7 +18,7 @@ public class EmailProxy {
     sendEmail(
         toEmail,
         "IMPORTANT: Pin Notification",
-        String.format("G2 Bank Pin Notification \nYour pin is %s", pin));
+        String.format("G2 Bank Pin Notification %nYour pin is %s", pin));
   }
 
   public void sendEmail(String toEmail, String subject, String content) {
