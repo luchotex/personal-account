@@ -4,6 +4,7 @@ import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
 import com.g2.personalaccount.model.Account;
 import com.g2.personalaccount.model.AccountAccess;
+import com.g2.personalaccount.model.AccountConfirmation;
 import com.g2.personalaccount.model.AccountHolder;
 import com.g2.personalaccount.model.AccountHolderId;
 import com.g2.personalaccount.model.enumerated.StatusEnum;
@@ -32,6 +33,7 @@ public class AccountTestUtils {
     request.setHolderFirstName("Test first Name update");
     request.setHolderLastName("Test last Name update");
     request.setEmail("emaiupdatedl@test.com");
+    request.setEmail("emaiupdatedl@test.com");
     request.setVoterCardId(1233244255L);
 
     return request;
@@ -57,6 +59,9 @@ public class AccountTestUtils {
     AccountAccess accountAccess = new AccountAccess();
     account.setAccountAccess(accountAccess);
 
+    AccountConfirmation confirmation = new AccountConfirmation();
+    account.setAccountConfirmation(confirmation);
+
     return account;
   }
 
@@ -73,6 +78,7 @@ public class AccountTestUtils {
     accountHolder.setEmail(accountRequest.getEmail());
 
     AccountHolderId accountHolderId = new AccountHolderId();
+    accountHolderId.setSsn(343523432l);
     accountHolderId.setVoterCardId(accountRequest.getVoterCardId());
     accountHolder.setAccountHolderId(accountHolderId);
 

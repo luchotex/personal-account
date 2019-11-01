@@ -12,7 +12,6 @@ import com.g2.personalaccount.repositories.AccountRepository;
 import com.g2.personalaccount.services.AccountService;
 import com.g2.personalaccount.utils.PinGenerator;
 import java.util.Optional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,6 +23,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class AccountServiceImpl implements AccountService {
 
+  public static final String ACCOUNT_WITH_SAME_SSN_EXIST = "The SSN %s already exists";
+  public static final String ACCOUNT_WITH_SAME_EMAIL_EXISTS = "The email %s already exists";
+  public static final String ACCOUNT_NUMBER_DOESNT_EXISTS = "The account number %s doesn't exists";
+  public static final String EMAIL_ALREADY_EXISTS_IN_ANOTHER_ACCOUNT =
+      "The email %s already exists in another account";
+  public static final String EMAIL_CORRUPTED_DATA =
+      "There is corrupted data related with the email";
   private Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
   private AccountMapper accountMapper;
@@ -61,7 +67,7 @@ public class AccountServiceImpl implements AccountService {
 
     if (foundSSNAccount.isPresent()) {
       throw new InvalidArgumentsException(
-          String.format("The SSN %s already exists", request.getSsn()));
+          String.format(ACCOUNT_WITH_SAME_SSN_EXIST, request.getSsn()));
     }
 
     Optional<Account> foundEmailAccount =
@@ -69,7 +75,7 @@ public class AccountServiceImpl implements AccountService {
 
     if (foundEmailAccount.isPresent()) {
       throw new InvalidArgumentsException(
-          String.format("The email %s already exists", request.getEmail()));
+          String.format(ACCOUNT_WITH_SAME_EMAIL_EXISTS, request.getEmail()));
     }
 
     Integer generatedPin =
@@ -104,7 +110,7 @@ public class AccountServiceImpl implements AccountService {
 
     if (!foundAccountOptional.isPresent()) {
       throw new InvalidArgumentsException(
-          String.format("The account number doesn't exists", request.getId()));
+          String.format(ACCOUNT_NUMBER_DOESNT_EXISTS, request.getId()));
     }
 
     Account foundAccount = foundAccountOptional.get();
@@ -112,12 +118,13 @@ public class AccountServiceImpl implements AccountService {
     Optional<Account> foundEmailAccountOptional =
         accountRepository.findByAccountHolder_Email(request.getEmail());
 
-    Account emailAccountFound = foundEmailAccountOptional.get();
+    if (!foundEmailAccountOptional.isPresent()) {
+      throw new InvalidArgumentsException(String.format(EMAIL_CORRUPTED_DATA));
+    }
 
-    if (foundEmailAccountOptional.isPresent()
-        && foundAccount.getId().equals(emailAccountFound.getId())) {
+    if (!foundAccount.getId().equals(foundEmailAccountOptional.get().getId())) {
       throw new InvalidArgumentsException(
-          String.format("The email %s already exists in another account", request.getEmail()));
+          String.format(EMAIL_ALREADY_EXISTS_IN_ANOTHER_ACCOUNT, request.getEmail()));
     }
 
     accountMapper.toEntity(request, foundAccount);
