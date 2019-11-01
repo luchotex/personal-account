@@ -2,11 +2,13 @@ package com.g2.personalaccount.utils;
 
 import java.util.Random;
 import org.apache.commons.lang.RandomStringUtils;
+import org.springframework.stereotype.Component;
 
 /**
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
  * @created 2019-10-31 12:54
  */
+@Component
 public class PinGenerator {
 
   public Integer generateRandom(Integer length) {

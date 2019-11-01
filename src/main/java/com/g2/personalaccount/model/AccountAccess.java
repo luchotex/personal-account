@@ -29,6 +29,22 @@ public class AccountAccess extends EditionDates {
 
   @Column private String pin;
 
+  public Long getId() {
+    return id;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
+  }
+
+  public Account getAccount() {
+    return account;
+  }
+
+  public void setAccount(Account account) {
+    this.account = account;
+  }
+
   public String getPin() {
     return pin;
   }
