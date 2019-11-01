@@ -17,6 +17,10 @@ public class AccountRequest {
   @NotEmpty(message = "The last name musn't be empty value")
   private String holderLastName;
 
+  @NotNull(message = "The email must have a value")
+  @NotNull(message = "The email musn't be empty value")
+  private String email;
+
   @NotNull(message = "The ssn must have a value")
   private Integer ssn;
 
@@ -37,6 +41,14 @@ public class AccountRequest {
 
   public void setHolderLastName(String holderLastName) {
     this.holderLastName = holderLastName;
+  }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public void setEmail(String email) {
+    this.email = email;
   }
 
   public Integer getSsn() {

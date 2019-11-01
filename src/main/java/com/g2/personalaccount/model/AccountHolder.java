@@ -16,6 +16,9 @@ public class AccountHolder {
   @Column(name = "last_name")
   private String lastName;
 
+  @Column(name = "email")
+  private String email;
+
   @Embedded private AccountHolderId accountHolderId;
 
   public String getFirstName() {
@@ -32,6 +35,14 @@ public class AccountHolder {
 
   public void setLastName(String lastName) {
     this.lastName = lastName;
+  }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public void setEmail(String email) {
+    this.email = email;
   }
 
   public AccountHolderId getAccountHolderId() {

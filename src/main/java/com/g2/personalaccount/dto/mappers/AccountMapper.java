@@ -17,11 +17,12 @@ import org.mapstruct.MappingTarget;
 @DecoratedWith(AccountMapperDecorator.class)
 public interface AccountMapper {
 
-  @Mapping(target = "accountHolder.firstName", source = "holderFirstName")
-  @Mapping(target = "accountHolder.lastName", source = "holderLastName")
-  @Mapping(target = "accountHolder.accountHolderId.ssn", source = "ssn")
-  @Mapping(target = "accountHolder.accountHolderId.voterCardId", source = "voterCardId")
-  Account toEntity(AccountRequest request);
+  @Mapping(target = "accountHolder.firstName", source = "request.holderFirstName")
+  @Mapping(target = "accountHolder.lastName", source = "request.holderLastName")
+  @Mapping(target = "accountHolder.email", source = "request.email")
+  @Mapping(target = "accountHolder.accountHolderId.ssn", source = "request.ssn")
+  @Mapping(target = "accountHolder.accountHolderId.voterCardId", source = "request.voterCardId")
+  Account toEntity(AccountRequest request, Integer pin);
 
   @Mapping(target = "accountNumber", source = "id")
   @Mapping(target = "holderFirstName", source = "accountHolder.firstName")
