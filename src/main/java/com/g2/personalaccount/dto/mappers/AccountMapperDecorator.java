@@ -4,7 +4,6 @@ import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.model.Account;
 import com.g2.personalaccount.model.AccountAccess;
 import com.g2.personalaccount.model.enumerated.StatusEnum;
-import com.g2.personalaccount.utils.PinGenerator;
 import java.util.Objects;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,11 +19,9 @@ public abstract class AccountMapperDecorator implements AccountMapper {
   @Qualifier("delegate")
   private AccountMapper delegate;
 
-  @Autowired private PinGenerator pinGenerator;
-
   @Override
-  public Account toEntity(AccountRequest request) {
-    Account account = delegate.toEntity(request);
+  public Account toEntity(AccountRequest request, Integer pin) {
+    Account account = delegate.toEntity(request, pin);
 
     if (Objects.isNull(account)) {
       return null;
@@ -34,8 +31,7 @@ public abstract class AccountMapperDecorator implements AccountMapper {
     account.setAccountAccess(new AccountAccess());
     // TODO define pin length configuration
 
-    Integer generatedPin = pinGenerator.generateRandom(4);
-    String md5Pin = DigestUtils.md5Hex(String.valueOf(generatedPin));
+    String md5Pin = DigestUtils.md5Hex(String.valueOf(pin));
 
     account.getAccountAccess().setPin(md5Pin);
 
