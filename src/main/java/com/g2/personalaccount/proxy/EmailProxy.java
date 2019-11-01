@@ -7,7 +7,4 @@ import org.springframework.stereotype.Component;
  * @created 2019-10-31 20:06
  */
 @Component
-public class EmailProxy {
-
-    
-}
+public class EmailProxy {}
