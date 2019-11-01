@@ -10,6 +10,7 @@ public class AccountResponse {
   private Long accountNumber;
   private String holderFirstName;
   private String holderLastName;
+  private String email;
   private Integer ssn;
   private Integer voterCardId;
 
@@ -43,6 +44,14 @@ public class AccountResponse {
 
   public void setHolderLastName(String holderLastName) {
     this.holderLastName = holderLastName;
+  }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public void setEmail(String email) {
+    this.email = email;
   }
 
   public Integer getSsn() {

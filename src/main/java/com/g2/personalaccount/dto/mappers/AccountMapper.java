@@ -27,6 +27,7 @@ public interface AccountMapper {
   @Mapping(target = "accountNumber", source = "id")
   @Mapping(target = "holderFirstName", source = "accountHolder.firstName")
   @Mapping(target = "holderLastName", source = "accountHolder.lastName")
+  @Mapping(target = "email", source = "accountHolder.email")
   @Mapping(target = "ssn", source = "accountHolder.accountHolderId.ssn")
   @Mapping(target = "voterCardId", source = "accountHolder.accountHolderId.voterCardId")
   AccountResponse toResponse(Account account);
