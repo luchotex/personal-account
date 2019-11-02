@@ -33,12 +33,14 @@ public class AccountServiceImpl implements AccountService {
       "The email %s already exists in another account";
 
   public static final String PIN_IS_INCORRECT = "The PIN is incorrect for account number: %s";
-  public static final String THE_ACCOUNT_NUMBER_IS_NOT_ACTIVE =
-      "The account number %s has not active state";
+  public static final String THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION =
+      "The account number %s is waiting for confirmation";
   public static final String ACCOUNT_SSN_ON_CONFIRMATION =
       "The account number %s with SSN %s is waiting for confirmation";
   public static final String ACCOUNT_EMAIL_ON_CONFIRMATION =
       "The account number %s with email %s is waiting for confirmation";
+  public static final String IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION =
+      "The account number is not authenticated to perform this operation";
   private Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
   private AccountMapper accountMapper;

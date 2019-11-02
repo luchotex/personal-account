@@ -1,6 +1,7 @@
 package com.g2.personalaccount.repositories;
 
 import com.g2.personalaccount.model.Account;
+import com.g2.personalaccount.model.enumerated.StatusEnum;
 import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -12,7 +13,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AccountRepository extends CrudRepository<Account, Long> {
 
-  Optional<Account> findByAccountHolder_AccountHolderId_Ssn(Long ssn);
+  Optional<Account> findByAccountHolder_AccountHolderId_SsnAndStatus(
+      Long ssn, StatusEnum statusEnum);
 
-  Optional<Account> findByAccountHolder_Email(String email);
+  Optional<Account> findByAccountHolder_EmailAndStatus(String email, StatusEnum statusEnum);
 }

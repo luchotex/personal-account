@@ -6,8 +6,9 @@ import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_SS
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_WITH_SAME_EMAIL_EXISTS;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_WITH_SAME_SSN_EXIST;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.EMAIL_ALREADY_EXISTS_IN_ANOTHER_ACCOUNT;
+import static com.g2.personalaccount.services.impl.AccountServiceImpl.IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.PIN_IS_INCORRECT;
-import static com.g2.personalaccount.services.impl.AccountServiceImpl.THE_ACCOUNT_NUMBER_IS_NOT_ACTIVE;
+import static com.g2.personalaccount.services.impl.AccountServiceImpl.THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION;
 
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
@@ -35,7 +36,8 @@ public class EditionValidator {
 
   public void validateCreation(AccountRequest request) {
     Optional<Account> foundSSNAccount =
-        accountRepository.findByAccountHolder_AccountHolderId_Ssn(request.getSsn());
+        accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatus(
+            request.getSsn(), StatusEnum.ACTIVE);
 
     if (foundSSNAccount.isPresent()) {
       if (foundSSNAccount.get().getStatus().equals(StatusEnum.ON_CONFIRM)) {
@@ -49,7 +51,7 @@ public class EditionValidator {
     }
 
     Optional<Account> foundEmailAccount =
-        accountRepository.findByAccountHolder_Email(request.getEmail());
+        accountRepository.findByAccountHolder_EmailAndStatus(request.getEmail(), StatusEnum.ACTIVE);
 
     if (foundEmailAccount.isPresent()) {
       if (foundEmailAccount.get().getStatus().equals(StatusEnum.ON_CONFIRM)) {
@@ -74,13 +76,13 @@ public class EditionValidator {
 
     Account foundAccount = foundAccountOptional.get();
 
-    if (!foundAccount.getStatus().equals(StatusEnum.ACTIVE)) {
+    if (foundAccount.getStatus().equals(StatusEnum.ON_CONFIRM)) {
       throw new InvalidArgumentsException(
-          String.format(THE_ACCOUNT_NUMBER_IS_NOT_ACTIVE, request.getId()));
+          String.format(THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION, request.getId()));
     }
 
     Optional<Account> foundEmailAccountOptional =
-        accountRepository.findByAccountHolder_Email(request.getEmail());
+        accountRepository.findByAccountHolder_EmailAndStatus(request.getEmail(), StatusEnum.ACTIVE);
 
     if (foundEmailAccountOptional.isPresent()
         && !foundAccount.getId().equals(foundEmailAccountOptional.get().getId())) {
@@ -94,9 +96,7 @@ public class EditionValidator {
             .getAuthenticationExpiration()
             .isBefore(LocalDateTime.now())) {
       throw new InvalidArgumentsException(
-          String.format(
-              "The account number is not authenticated to perform this operation",
-              request.getId()));
+          String.format(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION, request.getId()));
     }
     return foundAccount;
   }
@@ -112,7 +112,7 @@ public class EditionValidator {
 
     if (!foundAccount.getStatus().equals(StatusEnum.ACTIVE)) {
       throw new InvalidArgumentsException(
-          String.format(THE_ACCOUNT_NUMBER_IS_NOT_ACTIVE, request.getAccountNumber()));
+          String.format(THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION, request.getAccountNumber()));
     }
 
     if (!foundAccount.getAccountAccess().getPin().equals(request.getPin())) {

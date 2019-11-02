@@ -1,11 +1,14 @@
 package com.g2.personalaccount.services.impl;
 
+import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_EMAIL_ON_CONFIRMATION;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_NUMBER_DOESNT_EXISTS;
+import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_SSN_ON_CONFIRMATION;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_WITH_SAME_EMAIL_EXISTS;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_WITH_SAME_SSN_EXIST;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.EMAIL_ALREADY_EXISTS_IN_ANOTHER_ACCOUNT;
+import static com.g2.personalaccount.services.impl.AccountServiceImpl.IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.PIN_IS_INCORRECT;
-import static com.g2.personalaccount.services.impl.AccountServiceImpl.THE_ACCOUNT_NUMBER_IS_NOT_ACTIVE;
+import static com.g2.personalaccount.services.impl.AccountServiceImpl.THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION;
 import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -106,6 +109,10 @@ public class AccountServiceImplTest {
 
     Account returnedAccount = AccountTestUtils.createAccount(request);
 
+    when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatus(anyLong(), any()))
+        .thenReturn(Optional.empty());
+    when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
+        .thenReturn(Optional.empty());
     when(accountRepository.save(any())).thenReturn(returnedAccount);
     doNothing().when(emailProxy).sendPin(anyString(), anyInt());
     doNothing().when(emailProxy).sendConfirmation(anyString(), anyString(), anyString());
@@ -166,6 +173,91 @@ public class AccountServiceImplTest {
     assertEquals(
         returnedAccount.getAccountHolder().getAccountHolderId().getVoterCardId(),
         response.getVoterCardId());
+    verify(accountRepository, times(1))
+        .findByAccountHolder_AccountHolderId_SsnAndStatus(anyLong(), any());
+    verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatus(anyString(), any());
+  }
+
+  @Test
+  public void create_saveSuccessfullyClosedBoth() {
+
+    // given
+    AccountRequest request = AccountTestUtils.createAccountRequest();
+
+    Account returnedAccount = AccountTestUtils.createAccount(request);
+
+    Account returnedSSNAccount = AccountTestUtils.createAccount(request);
+    returnedSSNAccount.setStatus(StatusEnum.INACTIVE);
+    Account returnedEmailAccount = AccountTestUtils.createAccount(request);
+    returnedEmailAccount.setStatus(StatusEnum.INACTIVE);
+
+    when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatus(anyLong(), any()))
+        .thenReturn(Optional.of(returnedSSNAccount));
+    when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
+        .thenReturn(Optional.of(returnedEmailAccount));
+    when(accountRepository.save(any())).thenReturn(returnedAccount);
+    doNothing().when(emailProxy).sendPin(anyString(), anyInt());
+    doNothing().when(emailProxy).sendConfirmation(anyString(), anyString(), anyString());
+
+    // when
+
+    AccountResponse response = accountService.create(request);
+
+    // then
+    Set<ConstraintViolation<AccountRequest>> violations = validator.validate(request);
+    assertTrue(violations.isEmpty());
+
+    assertNotNull(response);
+
+    ArgumentCaptor<Account> accountArgumentCaptor = ArgumentCaptor.forClass(Account.class);
+
+    verify(accountRepository, times(1)).save(accountArgumentCaptor.capture());
+    verify(emailProxy, times(1)).sendPin(anyString(), anyInt());
+    verify(emailProxy, times(1)).sendConfirmation(anyString(), anyString(), anyString());
+
+    Account savingValue = accountArgumentCaptor.getValue();
+
+    assertNotNull(savingValue.getAccountAccess().getPin());
+    assertEquals(32, savingValue.getAccountAccess().getPin().length());
+
+    assertEquals(request.getHolderFirstName(), savingValue.getAccountHolder().getFirstName());
+    assertEquals(request.getHolderLastName(), savingValue.getAccountHolder().getLastName());
+    assertEquals(request.getEmail(), savingValue.getAccountHolder().getEmail());
+
+    assertEquals(request.getSsn(), savingValue.getAccountHolder().getAccountHolderId().getSsn());
+    assertEquals(
+        request.getVoterCardId(),
+        savingValue.getAccountHolder().getAccountHolderId().getVoterCardId());
+    assertEquals(StatusEnum.ON_CONFIRM, savingValue.getStatus());
+
+    assertNull(savingValue.getCreateDateTime());
+    assertNull(savingValue.getUpdateDateTime());
+    assertNull(savingValue.getAccountAccess().getCreateDateTime());
+    assertNull(savingValue.getAccountAccess().getUpdateDateTime());
+
+    assertNotNull(response.getAccountNumber());
+    assertEquals(returnedAccount.getId(), response.getAccountNumber());
+
+    assertNotNull(response.getHolderFirstName());
+    assertEquals(returnedAccount.getAccountHolder().getFirstName(), response.getHolderFirstName());
+
+    assertNotNull(response.getHolderLastName());
+    assertEquals(returnedAccount.getAccountHolder().getLastName(), response.getHolderLastName());
+
+    assertNotNull(response.getEmail());
+    assertEquals(returnedAccount.getAccountHolder().getEmail(), response.getEmail());
+
+    assertNotNull(response.getSsn());
+    assertEquals(
+        returnedAccount.getAccountHolder().getAccountHolderId().getSsn(), response.getSsn());
+
+    assertNotNull(response.getVoterCardId());
+    assertEquals(
+        returnedAccount.getAccountHolder().getAccountHolderId().getVoterCardId(),
+        response.getVoterCardId());
+    verify(accountRepository, times(1))
+        .findByAccountHolder_AccountHolderId_SsnAndStatus(anyLong(), any());
+    verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatus(anyString(), any());
   }
 
   @Test
@@ -232,7 +324,7 @@ public class AccountServiceImplTest {
 
     // when
     try {
-      when(accountRepository.findByAccountHolder_AccountHolderId_Ssn(anyLong()))
+      when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatus(anyLong(), any()))
           .thenReturn(Optional.of(returnedAccount));
       // when
 
@@ -240,6 +332,30 @@ public class AccountServiceImplTest {
     } catch (InvalidArgumentsException ex) {
       // then
       assertEquals(String.format(ACCOUNT_WITH_SAME_SSN_EXIST, request.getSsn()), ex.getMessage());
+    }
+  }
+
+  @Test
+  public void create_foundSsnOnConfirmationAccount() {
+
+    // given
+    AccountRequest request = AccountTestUtils.createAccountRequest();
+
+    Account returnedAccount = AccountTestUtils.createAccount(request);
+    returnedAccount.setStatus(StatusEnum.ON_CONFIRM);
+
+    // when
+    try {
+      when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatus(anyLong(), any()))
+          .thenReturn(Optional.of(returnedAccount));
+      // when
+
+      AccountResponse response = accountService.create(request);
+    } catch (InvalidArgumentsException ex) {
+      // then
+      assertEquals(
+          String.format(ACCOUNT_SSN_ON_CONFIRMATION, returnedAccount.getId(), request.getSsn()),
+          ex.getMessage());
     }
   }
 
@@ -253,10 +369,10 @@ public class AccountServiceImplTest {
 
     // when
     try {
-      when(accountRepository.findByAccountHolder_AccountHolderId_Ssn(anyLong()))
+      when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatus(anyLong(), any()))
           .thenReturn(Optional.empty());
 
-      when(accountRepository.findByAccountHolder_Email(anyString()))
+      when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
           .thenReturn(Optional.of(returnedAccount));
       // when
 
@@ -265,6 +381,33 @@ public class AccountServiceImplTest {
       // then
       assertEquals(
           String.format(ACCOUNT_WITH_SAME_EMAIL_EXISTS, request.getEmail()), ex.getMessage());
+    }
+  }
+
+  @Test
+  public void create_foundEmailOnConfirmationAccount() {
+
+    // given
+    AccountRequest request = AccountTestUtils.createAccountRequest();
+
+    Account returnedAccount = AccountTestUtils.createAccount(request);
+    returnedAccount.setStatus(StatusEnum.ON_CONFIRM);
+
+    // when
+    try {
+      when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatus(anyLong(), any()))
+          .thenReturn(Optional.empty());
+
+      when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
+          .thenReturn(Optional.of(returnedAccount));
+      // when
+
+      AccountResponse response = accountService.create(request);
+    } catch (InvalidArgumentsException ex) {
+      // then
+      assertEquals(
+          String.format(ACCOUNT_EMAIL_ON_CONFIRMATION, returnedAccount.getId(), request.getEmail()),
+          ex.getMessage());
     }
   }
 
@@ -284,8 +427,80 @@ public class AccountServiceImplTest {
     when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
 
     when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
-    when(accountRepository.findByAccountHolder_Email(anyString()))
+    when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
         .thenReturn(Optional.of(foundAccount));
+
+    when(accountRepository.save(any())).thenReturn(returnedAccount);
+
+    // when
+    AccountResponse response = accountService.updatePersonalData(request);
+
+    // then
+    assertNotNull(response);
+
+    Set<ConstraintViolation<AccountUpdateRequest>> violations = validator.validate(request);
+    assertTrue(violations.isEmpty());
+
+    ArgumentCaptor<Account> accountArgumentCaptor = ArgumentCaptor.forClass(Account.class);
+
+    verify(accountRepository, times(1)).save(accountArgumentCaptor.capture());
+
+    Account savingValue = accountArgumentCaptor.getValue();
+
+    assertEquals(request.getHolderFirstName(), savingValue.getAccountHolder().getFirstName());
+    assertEquals(request.getHolderLastName(), savingValue.getAccountHolder().getLastName());
+    assertEquals(request.getEmail(), savingValue.getAccountHolder().getEmail());
+
+    assertEquals(
+        request.getVoterCardId(),
+        savingValue.getAccountHolder().getAccountHolderId().getVoterCardId());
+    assertEquals(StatusEnum.ACTIVE, savingValue.getStatus());
+
+    assertNotNull(savingValue.getCreateDateTime());
+    assertNotNull(savingValue.getUpdateDateTime());
+    assertNotNull(savingValue.getAccountAccess().getCreateDateTime());
+    assertNotNull(savingValue.getAccountAccess().getUpdateDateTime());
+
+    assertNotNull(request.getId());
+    assertEquals(returnedAccount.getId(), request.getId());
+
+    assertNotNull(response.getHolderFirstName());
+    assertEquals(returnedAccount.getAccountHolder().getFirstName(), response.getHolderFirstName());
+
+    assertNotNull(response.getHolderLastName());
+    assertEquals(returnedAccount.getAccountHolder().getLastName(), response.getHolderLastName());
+
+    assertNotNull(response.getEmail());
+    assertEquals(returnedAccount.getAccountHolder().getEmail(), response.getEmail());
+
+    assertNotNull(response.getSsn());
+    assertEquals(
+        returnedAccount.getAccountHolder().getAccountHolderId().getSsn(), response.getSsn());
+
+    assertNotNull(response.getVoterCardId());
+    assertEquals(
+        returnedAccount.getAccountHolder().getAccountHolderId().getVoterCardId(),
+        response.getVoterCardId());
+  }
+
+  @Test
+  public void updatePersonalData_updateSuccessfullyEmailNotFound() {
+
+    // given
+    AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
+
+    Account returnedAccount = AccountTestUtils.createUpdateAccount(request);
+
+    Account foundAccount = AccountTestUtils.createUpdateAccount(request);
+    foundAccount
+        .getAccountAccess()
+        .setAuthenticationExpiration(LocalDateTime.now().plusSeconds(30));
+
+    when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+
+    when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+    when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
+        .thenReturn(Optional.empty());
 
     when(accountRepository.save(any())).thenReturn(returnedAccount);
 
@@ -358,6 +573,29 @@ public class AccountServiceImplTest {
   }
 
   @Test
+  public void update_accountIsOnConfirm() {
+
+    // given
+    AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
+    Account foundAccount = AccountTestUtils.createUpdateAccount(request);
+    foundAccount.setStatus(StatusEnum.ON_CONFIRM);
+    Account emailFoundAccount = AccountTestUtils.createUpdateAccount(request);
+    emailFoundAccount.setId(34324123L);
+
+    try {
+      // when
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+
+      AccountResponse response = accountService.updatePersonalData(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+      assertEquals(
+          String.format(THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION, request.getId()), ex.getMessage());
+    }
+  }
+
+  @Test
   public void update_emailExistsInAnotherAccount() {
 
     // given
@@ -371,8 +609,7 @@ public class AccountServiceImplTest {
 
       when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
 
-      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
-      when(accountRepository.findByAccountHolder_Email(anyString()))
+      when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
           .thenReturn(Optional.of(emailFoundAccount));
       AccountResponse response = accountService.updatePersonalData(request);
       // when
@@ -380,6 +617,59 @@ public class AccountServiceImplTest {
       // then
       assertEquals(
           String.format(EMAIL_ALREADY_EXISTS_IN_ANOTHER_ACCOUNT, request.getEmail()),
+          ex.getMessage());
+    }
+  }
+
+  @Test
+  public void update_notYetAuthenticated() {
+
+    // given
+    AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
+    Account foundAccount = AccountTestUtils.createUpdateAccount(request);
+    Account emailFoundAccount = AccountTestUtils.createUpdateAccount(request);
+
+    try {
+      // when
+
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+
+      when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
+          .thenReturn(Optional.of(emailFoundAccount));
+      AccountResponse response = accountService.updatePersonalData(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+      assertEquals(
+          String.format(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION, request.getEmail()),
+          ex.getMessage());
+    }
+  }
+
+  @Test
+  public void update_AuthenticationExpired() {
+
+    // given
+    AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
+    Account foundAccount = AccountTestUtils.createUpdateAccount(request);
+    Account emailFoundAccount = AccountTestUtils.createUpdateAccount(request);
+    foundAccount
+        .getAccountAccess()
+        .setAuthenticationExpiration(LocalDateTime.now().minusSeconds(100));
+
+    try {
+      // when
+
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+
+      when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
+          .thenReturn(Optional.of(emailFoundAccount));
+      AccountResponse response = accountService.updatePersonalData(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+      assertEquals(
+          String.format(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION, request.getEmail()),
           ex.getMessage());
     }
   }
@@ -399,7 +689,9 @@ public class AccountServiceImplTest {
 
     // when
     when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
-    foundAccount.getAccountAccess().setAuthenticationExpiration(LocalDateTime.now().plusSeconds(180));
+    foundAccount
+        .getAccountAccess()
+        .setAuthenticationExpiration(LocalDateTime.now().plusSeconds(180));
     when(accountRepository.save(any())).thenReturn(foundAccount);
     AuthenticationResponse response = accountService.authenticateAccount(request);
 
@@ -456,7 +748,7 @@ public class AccountServiceImplTest {
     } catch (InvalidArgumentsException ex) {
       // then
       assertEquals(
-          String.format(THE_ACCOUNT_NUMBER_IS_NOT_ACTIVE, request.getAccountNumber()),
+          String.format(THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION, request.getAccountNumber()),
           ex.getMessage());
     }
   }
