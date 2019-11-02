@@ -75,8 +75,8 @@ public class AccountRepositoryTest {
     savedAccount.getAccountHolder().setFirstName("First name updated");
     savedAccount.getAccountHolder().setLastName("Last name updated");
     savedAccount.getAccountHolder().setEmail("Email updated");
-    savedAccount.getAccountHolder().getAccountHolderId().setSsn(564234125);
-    savedAccount.getAccountHolder().getAccountHolderId().setVoterCardId(958923393);
+    savedAccount.getAccountHolder().getAccountHolderId().setSsn(564234125L);
+    savedAccount.getAccountHolder().getAccountHolderId().setVoterCardId(958923393L);
 
     Account updatedAccount = accountRepository.save(savedAccount);
 

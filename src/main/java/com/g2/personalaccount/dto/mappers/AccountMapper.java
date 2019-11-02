@@ -34,7 +34,6 @@ public interface AccountMapper {
 
   @Mapping(target = "accountHolder.firstName", source = "holderFirstName")
   @Mapping(target = "accountHolder.lastName", source = "holderLastName")
-  @Mapping(target = "accountHolder.accountHolderId.ssn", source = "ssn")
   @Mapping(target = "accountHolder.accountHolderId.voterCardId", source = "voterCardId")
   void toEntity(AccountUpdateRequest request, @MappingTarget Account account);
 }

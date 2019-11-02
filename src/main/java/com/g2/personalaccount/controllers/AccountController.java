@@ -4,6 +4,7 @@ import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
 import com.g2.personalaccount.dto.responses.AccountResponse;
 import com.g2.personalaccount.services.AccountService;
+import javax.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,13 +28,14 @@ public class AccountController {
   }
 
   @PostMapping
-  public ResponseEntity<AccountResponse> createAccount(@RequestBody AccountRequest accountRequest) {
+  public ResponseEntity<AccountResponse> createAccount(
+      @RequestBody @Valid AccountRequest accountRequest) {
     return new ResponseEntity<>(accountService.create(accountRequest), HttpStatus.OK);
   }
 
   @PutMapping(value = "/personal-data")
   public ResponseEntity<AccountResponse> updatePersonalData(
-      @RequestBody AccountUpdateRequest updateRequest) {
+      @RequestBody @Valid AccountUpdateRequest updateRequest) {
     return new ResponseEntity<>(accountService.updatePersonalData(updateRequest), HttpStatus.OK);
   }
 }

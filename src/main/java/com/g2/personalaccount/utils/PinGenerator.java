@@ -1,6 +1,6 @@
 package com.g2.personalaccount.utils;
 
-import java.util.Random;
+import java.security.SecureRandom;
 import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 public class PinGenerator {
 
   public Integer generateRandom(Integer length) {
-    Random rand = new Random();
+    SecureRandom rand = new SecureRandom();
 
     int firstDigit = rand.nextInt(9) + 1;
 

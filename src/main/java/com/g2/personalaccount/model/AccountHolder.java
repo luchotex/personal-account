@@ -3,12 +3,14 @@ package com.g2.personalaccount.model;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
+import lombok.Data;
 
 /**
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
  * @created 2019-10-30 18:03
  */
 @Embeddable
+@Data
 public class AccountHolder {
   @Column(name = "first_name")
   private String firstName;
@@ -20,36 +22,4 @@ public class AccountHolder {
   private String email;
 
   @Embedded private AccountHolderId accountHolderId;
-
-  public String getFirstName() {
-    return firstName;
-  }
-
-  public void setFirstName(String firstName) {
-    this.firstName = firstName;
-  }
-
-  public String getLastName() {
-    return lastName;
-  }
-
-  public void setLastName(String lastName) {
-    this.lastName = lastName;
-  }
-
-  public String getEmail() {
-    return email;
-  }
-
-  public void setEmail(String email) {
-    this.email = email;
-  }
-
-  public AccountHolderId getAccountHolderId() {
-    return accountHolderId;
-  }
-
-  public void setAccountHolderId(AccountHolderId accountHolderId) {
-    this.accountHolderId = accountHolderId;
-  }
 }

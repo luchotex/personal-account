@@ -10,24 +10,24 @@ import javax.persistence.Embeddable;
 @Embeddable
 public class AccountHolderId {
   @Column(name = "ssn")
-  private Integer ssn;
+  private Long ssn;
 
   @Column(name = "voter_card_id")
-  private Integer voterCardId;
+  private Long voterCardId;
 
-  public Integer getSsn() {
+  public Long getSsn() {
     return ssn;
   }
 
-  public void setSsn(Integer ssn) {
+  public void setSsn(Long ssn) {
     this.ssn = ssn;
   }
 
-  public Integer getVoterCardId() {
+  public Long getVoterCardId() {
     return voterCardId;
   }
 
-  public void setVoterCardId(Integer voterCardId) {
+  public void setVoterCardId(Long voterCardId) {
     this.voterCardId = voterCardId;
   }
 }
