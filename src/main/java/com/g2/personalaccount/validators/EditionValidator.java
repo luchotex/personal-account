@@ -5,11 +5,14 @@ import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_NU
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_SSN_ON_CONFIRMATION;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_WITH_SAME_EMAIL_EXISTS;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_WITH_SAME_SSN_EXIST;
+import static com.g2.personalaccount.services.impl.AccountServiceImpl.ALREADY_CLOSED_ACCOUNT;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.EMAIL_ALREADY_EXISTS_IN_ANOTHER_ACCOUNT;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.PIN_IS_INCORRECT;
+import static com.g2.personalaccount.services.impl.AccountServiceImpl.THE_ACCOUNT_IS_CLOSED;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION;
 
+import com.g2.personalaccount.dto.requests.AccountCloseRequest;
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
 import com.g2.personalaccount.dto.requests.AuthenticationRequest;
@@ -71,16 +74,10 @@ public class EditionValidator {
 
   public Account validateUpdate(
       AccountUpdateRequest request, Optional<Account> foundAccountOptional) {
-    if (!foundAccountOptional.isPresent()) {
-      throw new InvalidArgumentsException(
-          String.format(ACCOUNT_NUMBER_DOESNT_EXISTS, request.getId()));
-    }
+    Account foundAccount = validateExistConfirmation(foundAccountOptional, request.getId());
 
-    Account foundAccount = foundAccountOptional.get();
-
-    if (foundAccount.getStatus().equals(StatusEnum.ON_CONFIRM)) {
-      throw new InvalidArgumentsException(
-          String.format(THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION, request.getId()));
+    if (foundAccount.getStatus().equals(StatusEnum.INACTIVE)) {
+      throw new InvalidArgumentsException(String.format(THE_ACCOUNT_IS_CLOSED, request.getId()));
     }
 
     Optional<Account> foundEmailAccountOptional =
@@ -98,29 +95,57 @@ public class EditionValidator {
             .getAccountAccess()
             .getAuthenticationExpiration()
             .isBefore(LocalDateTime.now())) {
-      throw new InvalidArgumentsException(
-          String.format(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION, request.getId()));
+      throw new InvalidArgumentsException(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION);
+    }
+    return foundAccount;
+  }
+
+  private Account validateExistConfirmation(Optional<Account> foundAccountOptional, Long id) {
+    if (!foundAccountOptional.isPresent()) {
+      throw new InvalidArgumentsException(String.format(ACCOUNT_NUMBER_DOESNT_EXISTS, id));
+    }
+
+    Account foundAccount = foundAccountOptional.get();
+
+    if (foundAccount.getStatus().equals(StatusEnum.ON_CONFIRM)) {
+      throw new InvalidArgumentsException(String.format(THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION, id));
     }
     return foundAccount;
   }
 
   public Account validateAuthentication(
       AuthenticationRequest request, Optional<Account> foundAccountOptional) {
-    if (!foundAccountOptional.isPresent()) {
-      throw new InvalidArgumentsException(
-          String.format(ACCOUNT_NUMBER_DOESNT_EXISTS, request.getAccountNumber()));
-    }
+    Account foundAccount =
+        validateExistConfirmation(foundAccountOptional, request.getAccountNumber());
 
-    Account foundAccount = foundAccountOptional.get();
-
-    if (!foundAccount.getStatus().equals(StatusEnum.ACTIVE)) {
+    if (foundAccount.getStatus().equals(StatusEnum.INACTIVE)) {
       throw new InvalidArgumentsException(
-          String.format(THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION, request.getAccountNumber()));
+          String.format(THE_ACCOUNT_IS_CLOSED, request.getAccountNumber()));
     }
 
     if (!foundAccount.getAccountAccess().getPin().equals(request.getPin())) {
       throw new InvalidArgumentsException(
           String.format(PIN_IS_INCORRECT, request.getAccountNumber()));
+    }
+    return foundAccount;
+  }
+
+  public Account closeAccountValidations(
+      AccountCloseRequest request, Optional<Account> foundAccountOptional) {
+    Account foundAccount =
+        validateExistConfirmation(foundAccountOptional, request.getAccountNumber());
+
+    if (foundAccount.getStatus().equals(StatusEnum.INACTIVE)) {
+      throw new InvalidArgumentsException(
+          String.format(ALREADY_CLOSED_ACCOUNT, request.getAccountNumber()));
+    }
+
+    if (foundAccount.getAccountAccess().getAuthenticationExpiration() == null
+        || foundAccount
+            .getAccountAccess()
+            .getAuthenticationExpiration()
+            .isBefore(LocalDateTime.now())) {
+      throw new InvalidArgumentsException(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION);
     }
     return foundAccount;
   }

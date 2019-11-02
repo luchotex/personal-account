@@ -1,5 +1,6 @@
 package com.g2.personalaccount.utils;
 
+import com.g2.personalaccount.dto.requests.AccountCloseRequest;
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
 import com.g2.personalaccount.model.Account;
@@ -91,5 +92,12 @@ public class AccountTestUtils {
     account.setAccountHolder(accountHolder);
 
     return account;
+  }
+
+  public static AccountCloseRequest createAccountClosed() {
+    AccountCloseRequest request = new AccountCloseRequest();
+    request.setAccountNumber(1432423l);
+
+    return request;
   }
 }

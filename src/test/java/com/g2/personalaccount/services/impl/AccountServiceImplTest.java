@@ -5,9 +5,11 @@ import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_NU
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_SSN_ON_CONFIRMATION;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_WITH_SAME_EMAIL_EXISTS;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_WITH_SAME_SSN_EXIST;
+import static com.g2.personalaccount.services.impl.AccountServiceImpl.ALREADY_CLOSED_ACCOUNT;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.EMAIL_ALREADY_EXISTS_IN_ANOTHER_ACCOUNT;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.PIN_IS_INCORRECT;
+import static com.g2.personalaccount.services.impl.AccountServiceImpl.THE_ACCOUNT_IS_CLOSED;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION;
 import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertEquals;
@@ -25,9 +27,11 @@ import static org.mockito.Mockito.when;
 
 import com.g2.personalaccount.config.ServiceConfig;
 import com.g2.personalaccount.dto.mappers.AccountMapper;
+import com.g2.personalaccount.dto.requests.AccountCloseRequest;
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
 import com.g2.personalaccount.dto.requests.AuthenticationRequest;
+import com.g2.personalaccount.dto.responses.AccountCloseResponse;
 import com.g2.personalaccount.dto.responses.AccountResponse;
 import com.g2.personalaccount.dto.responses.AuthenticationResponse;
 import com.g2.personalaccount.exceptions.InvalidArgumentsException;
@@ -129,9 +133,12 @@ public class AccountServiceImplTest {
 
     ArgumentCaptor<Account> accountArgumentCaptor = ArgumentCaptor.forClass(Account.class);
 
-    verify(accountRepository, times(1)).save(accountArgumentCaptor.capture());
+    verify(accountRepository, times(1))
+        .findByAccountHolder_AccountHolderId_SsnAndStatusIn(anyLong(), any());
+    verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
     verify(emailProxy, times(1)).sendPin(anyString(), anyInt());
     verify(emailProxy, times(1)).sendConfirmation(anyString(), anyString(), anyString());
+    verify(accountRepository, times(1)).save(accountArgumentCaptor.capture());
 
     Account savingValue = accountArgumentCaptor.getValue();
 
@@ -173,9 +180,6 @@ public class AccountServiceImplTest {
     assertEquals(
         returnedAccount.getAccountHolder().getAccountHolderId().getVoterCardId(),
         response.getVoterCardId());
-    verify(accountRepository, times(1))
-        .findByAccountHolder_AccountHolderId_SsnAndStatusIn(anyLong(), any());
-    verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
   }
 
   @Test
@@ -211,9 +215,12 @@ public class AccountServiceImplTest {
 
     ArgumentCaptor<Account> accountArgumentCaptor = ArgumentCaptor.forClass(Account.class);
 
-    verify(accountRepository, times(1)).save(accountArgumentCaptor.capture());
+    verify(accountRepository, times(1))
+        .findByAccountHolder_AccountHolderId_SsnAndStatusIn(anyLong(), any());
+    verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
     verify(emailProxy, times(1)).sendPin(anyString(), anyInt());
     verify(emailProxy, times(1)).sendConfirmation(anyString(), anyString(), anyString());
+    verify(accountRepository, times(1)).save(accountArgumentCaptor.capture());
 
     Account savingValue = accountArgumentCaptor.getValue();
 
@@ -255,9 +262,6 @@ public class AccountServiceImplTest {
     assertEquals(
         returnedAccount.getAccountHolder().getAccountHolderId().getVoterCardId(),
         response.getVoterCardId());
-    verify(accountRepository, times(1))
-        .findByAccountHolder_AccountHolderId_SsnAndStatusIn(anyLong(), any());
-    verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
   }
 
   @Test
@@ -331,6 +335,8 @@ public class AccountServiceImplTest {
       AccountResponse response = accountService.create(request);
     } catch (InvalidArgumentsException ex) {
       // then
+      verify(accountRepository, times(1))
+          .findByAccountHolder_AccountHolderId_SsnAndStatusIn(anyLong(), any());
       assertEquals(String.format(ACCOUNT_WITH_SAME_SSN_EXIST, request.getSsn()), ex.getMessage());
     }
   }
@@ -353,6 +359,8 @@ public class AccountServiceImplTest {
       AccountResponse response = accountService.create(request);
     } catch (InvalidArgumentsException ex) {
       // then
+      verify(accountRepository, times(1))
+          .findByAccountHolder_AccountHolderId_SsnAndStatusIn(anyLong(), any());
       assertEquals(
           String.format(ACCOUNT_SSN_ON_CONFIRMATION, returnedAccount.getId(), request.getSsn()),
           ex.getMessage());
@@ -379,6 +387,9 @@ public class AccountServiceImplTest {
       AccountResponse response = accountService.create(request);
     } catch (InvalidArgumentsException ex) {
       // then
+      verify(accountRepository, times(1))
+          .findByAccountHolder_AccountHolderId_SsnAndStatusIn(anyLong(), any());
+      verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
       assertEquals(
           String.format(ACCOUNT_WITH_SAME_EMAIL_EXISTS, request.getEmail()), ex.getMessage());
     }
@@ -405,6 +416,9 @@ public class AccountServiceImplTest {
       AccountResponse response = accountService.create(request);
     } catch (InvalidArgumentsException ex) {
       // then
+      verify(accountRepository, times(1))
+          .findByAccountHolder_AccountHolderId_SsnAndStatusIn(anyLong(), any());
+      verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
       assertEquals(
           String.format(ACCOUNT_EMAIL_ON_CONFIRMATION, returnedAccount.getId(), request.getEmail()),
           ex.getMessage());
@@ -441,6 +455,8 @@ public class AccountServiceImplTest {
 
     ArgumentCaptor<Account> accountArgumentCaptor = ArgumentCaptor.forClass(Account.class);
 
+    verify(accountRepository, times(1)).findById(anyLong());
+    verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
     verify(accountRepository, times(1)).save(accountArgumentCaptor.capture());
 
     Account savingValue = accountArgumentCaptor.getValue();
@@ -479,8 +495,6 @@ public class AccountServiceImplTest {
     assertEquals(
         returnedAccount.getAccountHolder().getAccountHolderId().getVoterCardId(),
         response.getVoterCardId());
-    verify(accountRepository, times(1)).findById(anyLong());
-    verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
   }
 
   @Test
@@ -515,6 +529,8 @@ public class AccountServiceImplTest {
 
     ArgumentCaptor<Account> accountArgumentCaptor = ArgumentCaptor.forClass(Account.class);
 
+    verify(accountRepository, times(1)).findById(anyLong());
+    verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
     verify(accountRepository, times(1)).save(accountArgumentCaptor.capture());
 
     Account savingValue = accountArgumentCaptor.getValue();
@@ -553,8 +569,6 @@ public class AccountServiceImplTest {
     assertEquals(
         returnedAccount.getAccountHolder().getAccountHolderId().getVoterCardId(),
         response.getVoterCardId());
-    verify(accountRepository, times(1)).findById(anyLong());
-    verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
   }
 
   @Test
@@ -570,6 +584,7 @@ public class AccountServiceImplTest {
       // when
     } catch (InvalidArgumentsException ex) {
       // then
+      verify(accountRepository, times(1)).findById(anyLong());
       assertEquals(String.format(ACCOUNT_NUMBER_DOESNT_EXISTS, request.getId()), ex.getMessage());
     }
   }
@@ -592,8 +607,32 @@ public class AccountServiceImplTest {
       // when
     } catch (InvalidArgumentsException ex) {
       // then
+      verify(accountRepository, times(1)).findById(anyLong());
       assertEquals(
           String.format(THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION, request.getId()), ex.getMessage());
+    }
+  }
+
+  @Test
+  public void update_accountIsClosed() {
+
+    // given
+    AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
+    Account foundAccount = AccountTestUtils.createUpdateAccount(request);
+    foundAccount.setStatus(StatusEnum.INACTIVE);
+    Account emailFoundAccount = AccountTestUtils.createUpdateAccount(request);
+    emailFoundAccount.setId(34324123L);
+
+    try {
+      // when
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+
+      AccountResponse response = accountService.updatePersonalData(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+      verify(accountRepository, times(1)).findById(anyLong());
+      assertEquals(String.format(THE_ACCOUNT_IS_CLOSED, request.getId()), ex.getMessage());
     }
   }
 
@@ -617,6 +656,8 @@ public class AccountServiceImplTest {
       // when
     } catch (InvalidArgumentsException ex) {
       // then
+      verify(accountRepository, times(1)).findById(anyLong());
+      verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
       assertEquals(
           String.format(EMAIL_ALREADY_EXISTS_IN_ANOTHER_ACCOUNT, request.getEmail()),
           ex.getMessage());
@@ -642,9 +683,9 @@ public class AccountServiceImplTest {
       // when
     } catch (InvalidArgumentsException ex) {
       // then
-      assertEquals(
-          String.format(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION, request.getEmail()),
-          ex.getMessage());
+      verify(accountRepository, times(1)).findById(anyLong());
+      verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
+      assertEquals(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION, ex.getMessage());
     }
   }
 
@@ -670,9 +711,9 @@ public class AccountServiceImplTest {
       // when
     } catch (InvalidArgumentsException ex) {
       // then
-      assertEquals(
-          String.format(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION, request.getEmail()),
-          ex.getMessage());
+      verify(accountRepository, times(1)).findById(anyLong());
+      verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
+      assertEquals(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION, ex.getMessage());
     }
   }
 
@@ -701,6 +742,7 @@ public class AccountServiceImplTest {
     assertNotNull(response);
     ArgumentCaptor<Account> accountArgumentCaptor = ArgumentCaptor.forClass(Account.class);
 
+    verify(accountRepository, times(1)).findById(anyLong());
     verify(accountRepository, times(1)).save(accountArgumentCaptor.capture());
     Account accountToSave = accountArgumentCaptor.getValue();
     assertTrue(
@@ -725,13 +767,14 @@ public class AccountServiceImplTest {
       // when
     } catch (InvalidArgumentsException ex) {
       // then
+      verify(accountRepository, times(1)).findById(anyLong());
       assertEquals(
           String.format(ACCOUNT_NUMBER_DOESNT_EXISTS, request.getAccountNumber()), ex.getMessage());
     }
   }
 
   @Test
-  public void authenticate_accountNotActive() {
+  public void authenticate_accountNotConfirmed() {
 
     // given
     AuthenticationRequest request = new AuthenticationRequest();
@@ -749,9 +792,35 @@ public class AccountServiceImplTest {
       // when
     } catch (InvalidArgumentsException ex) {
       // then
+      verify(accountRepository, times(1)).findById(anyLong());
       assertEquals(
           String.format(THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION, request.getAccountNumber()),
           ex.getMessage());
+    }
+  }
+
+  @Test
+  public void authenticate_accountClosed() {
+
+    // given
+    AuthenticationRequest request = new AuthenticationRequest();
+    request.setAccountNumber(1233252351L);
+    request.setPin("234235432asds13sdf");
+
+    Account foundAccount =
+        AccountTestUtils.createUpdateAccount(AccountTestUtils.createAccountUpdateRequest());
+    foundAccount.setStatus(StatusEnum.INACTIVE);
+
+    try {
+      // when
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+      AuthenticationResponse response = accountService.authenticateAccount(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+      verify(accountRepository, times(1)).findById(anyLong());
+      assertEquals(
+          String.format(THE_ACCOUNT_IS_CLOSED, request.getAccountNumber()), ex.getMessage());
     }
   }
 
@@ -775,7 +844,149 @@ public class AccountServiceImplTest {
       // when
     } catch (InvalidArgumentsException ex) {
       // then
+      verify(accountRepository, times(1)).findById(anyLong());
       assertEquals(String.format(PIN_IS_INCORRECT, request.getAccountNumber()), ex.getMessage());
+    }
+  }
+
+  @Test
+  public void closed_accountNotfound() {
+
+    // given
+    AccountCloseRequest request = AccountTestUtils.createAccountClosed();
+
+    try {
+      // when
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.empty());
+      AccountCloseResponse response = accountService.close(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+      verify(accountRepository, times(1)).findById(anyLong());
+      assertEquals(
+          String.format(ACCOUNT_NUMBER_DOESNT_EXISTS, request.getAccountNumber()), ex.getMessage());
+    }
+  }
+
+  @Test
+  public void closed_successfully() {
+
+    // given
+    AccountCloseRequest request = AccountTestUtils.createAccountClosed();
+    AccountUpdateRequest updateRequest = AccountTestUtils.createAccountUpdateRequest();
+    Account foundAccount = AccountTestUtils.createUpdateAccount(updateRequest);
+    Account emailFoundAccount = AccountTestUtils.createUpdateAccount(updateRequest);
+    foundAccount
+        .getAccountAccess()
+        .setAuthenticationExpiration(LocalDateTime.now().plusSeconds(100));
+    // when
+
+    when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+
+    AccountCloseResponse response = accountService.close(request);
+    // when
+    assertNotNull(response);
+
+    ArgumentCaptor<Account> accountArgumentCaptor = ArgumentCaptor.forClass(Account.class);
+
+    verify(accountRepository, times(1)).findById(anyLong());
+    verify(accountRepository, times(1)).save(accountArgumentCaptor.capture());
+
+    Account savingValue = accountArgumentCaptor.getValue();
+
+    assertEquals(StatusEnum.INACTIVE, savingValue.getStatus());
+  }
+
+  @Test
+  public void closed_accountNotConfirmed() {
+
+    // given
+    AccountCloseRequest request = AccountTestUtils.createAccountClosed();
+
+    Account foundAccount =
+        AccountTestUtils.createUpdateAccount(AccountTestUtils.createAccountUpdateRequest());
+    foundAccount.setStatus(StatusEnum.ON_CONFIRM);
+
+    try {
+      // when
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+      AccountCloseResponse response = accountService.close(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+      verify(accountRepository, times(1)).findById(anyLong());
+      assertEquals(
+          String.format(THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION, request.getAccountNumber()),
+          ex.getMessage());
+    }
+  }
+
+  @Test
+  public void closed_accountInactive() {
+
+    // given
+    AccountCloseRequest request = AccountTestUtils.createAccountClosed();
+
+    Account foundAccount =
+        AccountTestUtils.createUpdateAccount(AccountTestUtils.createAccountUpdateRequest());
+    foundAccount.setStatus(StatusEnum.INACTIVE);
+
+    try {
+      // when
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+      AccountCloseResponse response = accountService.close(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+      verify(accountRepository, times(1)).findById(anyLong());
+      assertEquals(
+          String.format(ALREADY_CLOSED_ACCOUNT, request.getAccountNumber()), ex.getMessage());
+    }
+  }
+
+  @Test
+  public void closed_notYetAuthenticated() {
+
+    // given
+    AccountCloseRequest request = AccountTestUtils.createAccountClosed();
+    AccountUpdateRequest updateRequest = AccountTestUtils.createAccountUpdateRequest();
+    Account foundAccount = AccountTestUtils.createUpdateAccount(updateRequest);
+
+    try {
+      // when
+
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+      AccountCloseResponse response = accountService.close(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+      verify(accountRepository, times(1)).findById(anyLong());
+      assertEquals(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION, ex.getMessage());
+    }
+  }
+
+  @Test
+  public void closed_AuthenticationExpired() {
+
+    // given
+    AccountCloseRequest request = AccountTestUtils.createAccountClosed();
+    AccountUpdateRequest updateRequest = AccountTestUtils.createAccountUpdateRequest();
+    Account foundAccount = AccountTestUtils.createUpdateAccount(updateRequest);
+    foundAccount
+        .getAccountAccess()
+        .setAuthenticationExpiration(LocalDateTime.now().minusSeconds(100));
+
+    try {
+      // when
+
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+
+      AccountCloseResponse response = accountService.close(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+      verify(accountRepository, times(1)).findById(anyLong());
+      assertEquals(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION, ex.getMessage());
     }
   }
 }
