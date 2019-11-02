@@ -109,9 +109,9 @@ public class AccountServiceImplTest {
 
     Account returnedAccount = AccountTestUtils.createAccount(request);
 
-    when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatus(anyLong(), any()))
+    when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatusIn(anyLong(), any()))
         .thenReturn(Optional.empty());
-    when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
+    when(accountRepository.findByAccountHolder_EmailAndStatusIn(anyString(), any()))
         .thenReturn(Optional.empty());
     when(accountRepository.save(any())).thenReturn(returnedAccount);
     doNothing().when(emailProxy).sendPin(anyString(), anyInt());
@@ -174,8 +174,8 @@ public class AccountServiceImplTest {
         returnedAccount.getAccountHolder().getAccountHolderId().getVoterCardId(),
         response.getVoterCardId());
     verify(accountRepository, times(1))
-        .findByAccountHolder_AccountHolderId_SsnAndStatus(anyLong(), any());
-    verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatus(anyString(), any());
+        .findByAccountHolder_AccountHolderId_SsnAndStatusIn(anyLong(), any());
+    verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
   }
 
   @Test
@@ -191,9 +191,9 @@ public class AccountServiceImplTest {
     Account returnedEmailAccount = AccountTestUtils.createAccount(request);
     returnedEmailAccount.setStatus(StatusEnum.INACTIVE);
 
-    when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatus(anyLong(), any()))
+    when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatusIn(anyLong(), any()))
         .thenReturn(Optional.of(returnedSSNAccount));
-    when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
+    when(accountRepository.findByAccountHolder_EmailAndStatusIn(anyString(), any()))
         .thenReturn(Optional.of(returnedEmailAccount));
     when(accountRepository.save(any())).thenReturn(returnedAccount);
     doNothing().when(emailProxy).sendPin(anyString(), anyInt());
@@ -256,8 +256,8 @@ public class AccountServiceImplTest {
         returnedAccount.getAccountHolder().getAccountHolderId().getVoterCardId(),
         response.getVoterCardId());
     verify(accountRepository, times(1))
-        .findByAccountHolder_AccountHolderId_SsnAndStatus(anyLong(), any());
-    verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatus(anyString(), any());
+        .findByAccountHolder_AccountHolderId_SsnAndStatusIn(anyLong(), any());
+    verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
   }
 
   @Test
@@ -324,7 +324,7 @@ public class AccountServiceImplTest {
 
     // when
     try {
-      when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatus(anyLong(), any()))
+      when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatusIn(anyLong(), any()))
           .thenReturn(Optional.of(returnedAccount));
       // when
 
@@ -346,7 +346,7 @@ public class AccountServiceImplTest {
 
     // when
     try {
-      when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatus(anyLong(), any()))
+      when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatusIn(anyLong(), any()))
           .thenReturn(Optional.of(returnedAccount));
       // when
 
@@ -369,10 +369,10 @@ public class AccountServiceImplTest {
 
     // when
     try {
-      when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatus(anyLong(), any()))
+      when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatusIn(anyLong(), any()))
           .thenReturn(Optional.empty());
 
-      when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
+      when(accountRepository.findByAccountHolder_EmailAndStatusIn(anyString(), any()))
           .thenReturn(Optional.of(returnedAccount));
       // when
 
@@ -395,10 +395,10 @@ public class AccountServiceImplTest {
 
     // when
     try {
-      when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatus(anyLong(), any()))
+      when(accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatusIn(anyLong(), any()))
           .thenReturn(Optional.empty());
 
-      when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
+      when(accountRepository.findByAccountHolder_EmailAndStatusIn(anyString(), any()))
           .thenReturn(Optional.of(returnedAccount));
       // when
 
@@ -425,9 +425,7 @@ public class AccountServiceImplTest {
         .setAuthenticationExpiration(LocalDateTime.now().plusSeconds(30));
 
     when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
-
-    when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
-    when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
+    when(accountRepository.findByAccountHolder_EmailAndStatusIn(anyString(), any()))
         .thenReturn(Optional.of(foundAccount));
 
     when(accountRepository.save(any())).thenReturn(returnedAccount);
@@ -481,6 +479,8 @@ public class AccountServiceImplTest {
     assertEquals(
         returnedAccount.getAccountHolder().getAccountHolderId().getVoterCardId(),
         response.getVoterCardId());
+    verify(accountRepository, times(1)).findById(anyLong());
+    verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
   }
 
   @Test
@@ -499,7 +499,7 @@ public class AccountServiceImplTest {
     when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
 
     when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
-    when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
+    when(accountRepository.findByAccountHolder_EmailAndStatusIn(anyString(), any()))
         .thenReturn(Optional.empty());
 
     when(accountRepository.save(any())).thenReturn(returnedAccount);
@@ -553,6 +553,8 @@ public class AccountServiceImplTest {
     assertEquals(
         returnedAccount.getAccountHolder().getAccountHolderId().getVoterCardId(),
         response.getVoterCardId());
+    verify(accountRepository, times(1)).findById(anyLong());
+    verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
   }
 
   @Test
@@ -609,7 +611,7 @@ public class AccountServiceImplTest {
 
       when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
 
-      when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
+      when(accountRepository.findByAccountHolder_EmailAndStatusIn(anyString(), any()))
           .thenReturn(Optional.of(emailFoundAccount));
       AccountResponse response = accountService.updatePersonalData(request);
       // when
@@ -634,7 +636,7 @@ public class AccountServiceImplTest {
 
       when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
 
-      when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
+      when(accountRepository.findByAccountHolder_EmailAndStatusIn(anyString(), any()))
           .thenReturn(Optional.of(emailFoundAccount));
       AccountResponse response = accountService.updatePersonalData(request);
       // when
@@ -662,7 +664,7 @@ public class AccountServiceImplTest {
 
       when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
 
-      when(accountRepository.findByAccountHolder_EmailAndStatus(anyString(), any()))
+      when(accountRepository.findByAccountHolder_EmailAndStatusIn(anyString(), any()))
           .thenReturn(Optional.of(emailFoundAccount));
       AccountResponse response = accountService.updatePersonalData(request);
       // when
