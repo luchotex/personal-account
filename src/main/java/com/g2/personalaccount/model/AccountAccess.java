@@ -1,5 +1,6 @@
 package com.g2.personalaccount.model;
 
+import java.time.LocalDateTime;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -31,4 +32,7 @@ public class AccountAccess extends EditionDates {
 
   @Column(name = "pin")
   private String pin;
+
+  @Column(name = "authentication_expiration")
+  private LocalDateTime authenticationExpiration;
 }

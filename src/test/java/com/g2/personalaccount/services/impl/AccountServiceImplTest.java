@@ -4,7 +4,8 @@ import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_NU
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_WITH_SAME_EMAIL_EXISTS;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_WITH_SAME_SSN_EXIST;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.EMAIL_ALREADY_EXISTS_IN_ANOTHER_ACCOUNT;
-import static com.g2.personalaccount.services.impl.AccountServiceImpl.EMAIL_CORRUPTED_DATA;
+import static com.g2.personalaccount.services.impl.AccountServiceImpl.PIN_IS_INCORRECT;
+import static com.g2.personalaccount.services.impl.AccountServiceImpl.THE_ACCOUNT_NUMBER_IS_NOT_ACTIVE;
 import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -23,7 +24,9 @@ import com.g2.personalaccount.config.ServiceConfig;
 import com.g2.personalaccount.dto.mappers.AccountMapper;
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
+import com.g2.personalaccount.dto.requests.AuthenticationRequest;
 import com.g2.personalaccount.dto.responses.AccountResponse;
+import com.g2.personalaccount.dto.responses.AuthenticationResponse;
 import com.g2.personalaccount.exceptions.InvalidArgumentsException;
 import com.g2.personalaccount.model.Account;
 import com.g2.personalaccount.model.enumerated.StatusEnum;
@@ -32,9 +35,14 @@ import com.g2.personalaccount.repositories.AccountRepository;
 import com.g2.personalaccount.services.AccountService;
 import com.g2.personalaccount.utils.AccountTestUtils;
 import com.g2.personalaccount.utils.PinGenerator;
+import com.g2.personalaccount.validators.EditionValidator;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Set;
-
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,11 +52,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 
 /** This Kind of test was necessary due to using of decorators, so we need to autowire the mapper */
 @ActiveProfiles("dev")
@@ -63,8 +66,9 @@ import javax.validation.ValidatorFactory;
       "MAIL_PASSWORD=Testg2123@",
       "MAIL_PORT=587",
       "SERVICE_URL=http://192.168.0.101:8080",
-      "EXPIRATION_SECONDS=8640",
-      "PIN_LENGTH=4"
+      "CONFIRMATION_EXPIRATION_SECONDS=8640",
+      "PIN_LENGTH=4",
+      "PIN_EXPIRATION_SECONDS=180"
     })
 public class AccountServiceImplTest {
 
@@ -75,13 +79,20 @@ public class AccountServiceImplTest {
   private PinGenerator pinGenerator;
   @Autowired private ServiceConfig serviceConfig;
   private Validator validator;
+  private EditionValidator editionValidator;
 
   @Before
   public void setUp() {
+    editionValidator = new EditionValidator(accountRepository);
     pinGenerator = new PinGenerator();
     accountService =
         new AccountServiceImpl(
-            accountMapper, accountRepository, emailProxy, pinGenerator, serviceConfig);
+            accountMapper,
+            accountRepository,
+            emailProxy,
+            pinGenerator,
+            serviceConfig,
+            editionValidator);
 
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     validator = factory.getValidator();
@@ -266,6 +277,9 @@ public class AccountServiceImplTest {
     Account returnedAccount = AccountTestUtils.createUpdateAccount(request);
 
     Account foundAccount = AccountTestUtils.createUpdateAccount(request);
+    foundAccount
+        .getAccountAccess()
+        .setAuthenticationExpiration(LocalDateTime.now().plusSeconds(30));
 
     when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
 
@@ -344,28 +358,6 @@ public class AccountServiceImplTest {
   }
 
   @Test
-  public void update_emailDataCorrupted() {
-
-    // given
-    AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
-    Account foundAccount = AccountTestUtils.createUpdateAccount(request);
-
-    try {
-      // when
-
-      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
-
-      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
-      when(accountRepository.findByAccountHolder_Email(anyString())).thenReturn(Optional.empty());
-      AccountResponse response = accountService.updatePersonalData(request);
-      // when
-    } catch (InvalidArgumentsException ex) {
-      // then
-      assertEquals(String.format(EMAIL_CORRUPTED_DATA, request.getEmail()), ex.getMessage());
-    }
-  }
-
-  @Test
   public void update_emailExistsInAnotherAccount() {
 
     // given
@@ -389,6 +381,107 @@ public class AccountServiceImplTest {
       assertEquals(
           String.format(EMAIL_ALREADY_EXISTS_IN_ANOTHER_ACCOUNT, request.getEmail()),
           ex.getMessage());
+    }
+  }
+
+  @Test
+  public void authenticate_successfully() {
+
+    // given
+    AuthenticationRequest request = new AuthenticationRequest();
+    request.setAccountNumber(1233252351L);
+    request.setPin("234235432asds13sdf");
+
+    Account foundAccount =
+        AccountTestUtils.createUpdateAccount(AccountTestUtils.createAccountUpdateRequest());
+    foundAccount.setStatus(StatusEnum.ACTIVE);
+    foundAccount.getAccountAccess().setPin("234235432asds13sdf");
+
+    // when
+    when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+    foundAccount.getAccountAccess().setAuthenticationExpiration(LocalDateTime.now().plusSeconds(180));
+    when(accountRepository.save(any())).thenReturn(foundAccount);
+    AuthenticationResponse response = accountService.authenticateAccount(request);
+
+    // when
+    assertNotNull(response);
+    ArgumentCaptor<Account> accountArgumentCaptor = ArgumentCaptor.forClass(Account.class);
+
+    verify(accountRepository, times(1)).save(accountArgumentCaptor.capture());
+    Account accountToSave = accountArgumentCaptor.getValue();
+    assertTrue(
+        accountToSave
+            .getAccountAccess()
+            .getAuthenticationExpiration()
+            .isAfter(LocalDateTime.now()));
+  }
+
+  @Test
+  public void authenticate_accountNotfound() {
+
+    // given
+    AuthenticationRequest request = new AuthenticationRequest();
+    request.setAccountNumber(1233252351L);
+    request.setPin("234235432asds13sdf");
+
+    try {
+      // when
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.empty());
+      AuthenticationResponse response = accountService.authenticateAccount(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+      assertEquals(
+          String.format(ACCOUNT_NUMBER_DOESNT_EXISTS, request.getAccountNumber()), ex.getMessage());
+    }
+  }
+
+  @Test
+  public void authenticate_accountNotActive() {
+
+    // given
+    AuthenticationRequest request = new AuthenticationRequest();
+    request.setAccountNumber(1233252351L);
+    request.setPin("234235432asds13sdf");
+
+    Account foundAccount =
+        AccountTestUtils.createUpdateAccount(AccountTestUtils.createAccountUpdateRequest());
+    foundAccount.setStatus(StatusEnum.ON_CONFIRM);
+
+    try {
+      // when
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+      AuthenticationResponse response = accountService.authenticateAccount(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+      assertEquals(
+          String.format(THE_ACCOUNT_NUMBER_IS_NOT_ACTIVE, request.getAccountNumber()),
+          ex.getMessage());
+    }
+  }
+
+  @Test
+  public void authenticate_pinIncorrect() {
+
+    // given
+    AuthenticationRequest request = new AuthenticationRequest();
+    request.setAccountNumber(1233252351L);
+    request.setPin("234235432asds13sdf");
+
+    Account foundAccount =
+        AccountTestUtils.createUpdateAccount(AccountTestUtils.createAccountUpdateRequest());
+    foundAccount.setStatus(StatusEnum.ACTIVE);
+    foundAccount.getAccountAccess().setPin("4324123fdjgkld");
+
+    try {
+      // when
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+      AuthenticationResponse response = accountService.authenticateAccount(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+      assertEquals(String.format(PIN_IS_INCORRECT, request.getAccountNumber()), ex.getMessage());
     }
   }
 }

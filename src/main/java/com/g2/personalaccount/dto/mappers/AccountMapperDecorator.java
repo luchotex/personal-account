@@ -45,7 +45,8 @@ public abstract class AccountMapperDecorator implements AccountMapper {
     AccountConfirmation confirmation = new AccountConfirmation();
     confirmation.setConfirmationId(UUID.randomUUID().toString());
     confirmation.setExpirationDate(
-        LocalDateTime.now().plusSeconds(Integer.valueOf(serviceConfig.getExpirationSeconds())));
+        LocalDateTime.now()
+            .plusSeconds(Integer.valueOf(serviceConfig.getConfirmationExpirationSeconds())));
     confirmation.setConfirmationStatusEnum(ConfirmationStatusEnum.ACTIVE);
 
     account.setAccountConfirmation(confirmation);

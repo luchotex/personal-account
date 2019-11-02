@@ -2,7 +2,9 @@ package com.g2.personalaccount.controllers;
 
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
+import com.g2.personalaccount.dto.requests.AuthenticationRequest;
 import com.g2.personalaccount.dto.responses.AccountResponse;
+import com.g2.personalaccount.dto.responses.AuthenticationResponse;
 import com.g2.personalaccount.services.AccountService;
 import javax.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -37,5 +39,12 @@ public class AccountController {
   public ResponseEntity<AccountResponse> updatePersonalData(
       @RequestBody @Valid AccountUpdateRequest updateRequest) {
     return new ResponseEntity<>(accountService.updatePersonalData(updateRequest), HttpStatus.OK);
+  }
+
+  @PostMapping("/authenticate")
+  public ResponseEntity<AuthenticationResponse> authenticateAccount(
+      @RequestBody @Valid AuthenticationRequest authenticationRequest) {
+    return new ResponseEntity<>(
+        accountService.authenticateAccount(authenticationRequest), HttpStatus.OK);
   }
 }
