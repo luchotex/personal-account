@@ -2,12 +2,15 @@ package com.g2.personalaccount.services.impl;
 
 import com.g2.personalaccount.config.ServiceConfig;
 import com.g2.personalaccount.dto.mappers.AccountMapper;
+import com.g2.personalaccount.dto.requests.AccountCloseRequest;
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
 import com.g2.personalaccount.dto.requests.AuthenticationRequest;
+import com.g2.personalaccount.dto.responses.AccountCloseResponse;
 import com.g2.personalaccount.dto.responses.AccountResponse;
 import com.g2.personalaccount.dto.responses.AuthenticationResponse;
 import com.g2.personalaccount.model.Account;
+import com.g2.personalaccount.model.enumerated.StatusEnum;
 import com.g2.personalaccount.proxy.EmailProxy;
 import com.g2.personalaccount.repositories.AccountRepository;
 import com.g2.personalaccount.services.AccountService;
@@ -35,12 +38,14 @@ public class AccountServiceImpl implements AccountService {
   public static final String PIN_IS_INCORRECT = "The PIN is incorrect for account number: %s";
   public static final String THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION =
       "The account number %s is waiting for confirmation";
+  public static final String THE_ACCOUNT_IS_CLOSED = "The account number %s is closed";
   public static final String ACCOUNT_SSN_ON_CONFIRMATION =
       "The account number %s with SSN %s is waiting for confirmation";
   public static final String ACCOUNT_EMAIL_ON_CONFIRMATION =
       "The account number %s with email %s is waiting for confirmation";
   public static final String IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION =
       "The account number is not authenticated to perform this operation";
+  public static final String ALREADY_CLOSED_ACCOUNT = "The account number %s is already closed";
   private Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
   private AccountMapper accountMapper;
@@ -132,5 +137,18 @@ public class AccountServiceImpl implements AccountService {
     foundAccount = accountRepository.save(foundAccount);
 
     return accountMapper.toExpirationResponse(foundAccount);
+  }
+
+  @Override
+  public AccountCloseResponse closeAccount(AccountCloseRequest request) {
+
+    Optional<Account> foundAccountOptional = accountRepository.findById(request.getAccountNumber());
+
+    Account foundAccount = editionValidator.closeAccountValidations(request, foundAccountOptional);
+
+    foundAccount.setStatus(StatusEnum.INACTIVE);
+    accountRepository.save(foundAccount);
+
+    return new AccountCloseResponse();
   }
 }

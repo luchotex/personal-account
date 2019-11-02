@@ -1,14 +1,17 @@
 package com.g2.personalaccount.controllers;
 
+import com.g2.personalaccount.dto.requests.AccountCloseRequest;
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
 import com.g2.personalaccount.dto.requests.AuthenticationRequest;
+import com.g2.personalaccount.dto.responses.AccountCloseResponse;
 import com.g2.personalaccount.dto.responses.AccountResponse;
 import com.g2.personalaccount.dto.responses.AuthenticationResponse;
 import com.g2.personalaccount.services.AccountService;
 import javax.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -46,5 +49,11 @@ public class AccountController {
       @RequestBody @Valid AuthenticationRequest authenticationRequest) {
     return new ResponseEntity<>(
         accountService.authenticateAccount(authenticationRequest), HttpStatus.OK);
+  }
+
+  @DeleteMapping("/close")
+  public ResponseEntity<AccountCloseResponse> closeAccount(
+      @RequestBody @Valid AccountCloseRequest request) {
+    return new ResponseEntity<>(accountService.closeAccount(request), HttpStatus.OK);
   }
 }

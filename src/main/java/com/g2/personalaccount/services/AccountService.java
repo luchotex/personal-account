@@ -1,8 +1,10 @@
 package com.g2.personalaccount.services;
 
+import com.g2.personalaccount.dto.requests.AccountCloseRequest;
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
 import com.g2.personalaccount.dto.requests.AuthenticationRequest;
+import com.g2.personalaccount.dto.responses.AccountCloseResponse;
 import com.g2.personalaccount.dto.responses.AccountResponse;
 import com.g2.personalaccount.dto.responses.AuthenticationResponse;
 
@@ -17,4 +19,8 @@ public interface AccountService {
   AccountResponse updatePersonalData(AccountUpdateRequest request);
 
   AuthenticationResponse authenticateAccount(AuthenticationRequest authenticationRequest);
+
+  // TODO implement java doc
+
+  AccountCloseResponse closeAccount(AccountCloseRequest request);
 }
