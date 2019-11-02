@@ -17,14 +17,12 @@ import org.hibernate.type.Type;
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
  * @created 2019-10-31 12:15
  */
-public class AccountNumberGenerator implements IdentifierGenerator, Configurable {
-
-  private String prefix;
+public class TransactionIdGenerator implements IdentifierGenerator, Configurable {
 
   @Override
   public void configure(Type type, Properties properties, ServiceRegistry serviceRegistry)
       throws MappingException {
-    prefix = properties.getProperty("prefix");
+    // Nothing necessary to implement
   }
 
   @Override
@@ -32,13 +30,13 @@ public class AccountNumberGenerator implements IdentifierGenerator, Configurable
       throws HibernateException {
 
     boolean isNotUnique = true;
-    StringBuilder shortId = new StringBuilder();
+
+    String generated = "";
 
     while (isNotUnique) {
-      String generated = RandomStringUtils.random(10, "0123456789");
-      shortId = new StringBuilder().append(prefix).append(generated);
+      generated = RandomStringUtils.random(16, "0123456789");
 
-      Stream ids = retrieveIds(session, object, shortId.toString());
+      Stream ids = retrieveIds(session, object, generated);
 
       Optional<String> optionalId = ids.map(String::valueOf).findFirst();
 
@@ -47,7 +45,7 @@ public class AccountNumberGenerator implements IdentifierGenerator, Configurable
       }
     }
 
-    return Long.valueOf(shortId.toString());
+    return Long.valueOf(generated);
   }
 
   private Stream retrieveIds(SharedSessionContractImplementor session, Object object, String id) {

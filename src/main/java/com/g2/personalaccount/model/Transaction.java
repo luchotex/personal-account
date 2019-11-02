@@ -5,10 +5,9 @@ import java.math.BigDecimal;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 import lombok.Data;
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
@@ -19,11 +18,10 @@ import lombok.Data;
 public class Transaction extends EditionDates {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "transaction_generator")
-  @SequenceGenerator(
-      name = "transaction_generator",
-      sequenceName = "transaction_id_seq",
-      allocationSize = 1)
+  @GeneratedValue(generator = "transaction-id-generator")
+  @GenericGenerator(
+      name = "transaction-id-generator",
+      strategy = "com.g2.personalaccount.model.generator.TransactionIdGenerator")
   @Column(name = "transaction_id")
   private Long id;
 

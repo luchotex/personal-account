@@ -18,6 +18,7 @@ import com.g2.personalaccount.model.Account;
 import com.g2.personalaccount.model.enumerated.StatusEnum;
 import com.g2.personalaccount.repositories.AccountRepository;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
 
@@ -36,8 +37,8 @@ public class EditionValidator {
 
   public void validateCreation(AccountRequest request) {
     Optional<Account> foundSSNAccount =
-        accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatus(
-            request.getSsn(), StatusEnum.ACTIVE);
+        accountRepository.findByAccountHolder_AccountHolderId_SsnAndStatusIn(
+            request.getSsn(), Arrays.asList(StatusEnum.ACTIVE, StatusEnum.ON_CONFIRM));
 
     if (foundSSNAccount.isPresent()) {
       if (foundSSNAccount.get().getStatus().equals(StatusEnum.ON_CONFIRM)) {
@@ -51,7 +52,8 @@ public class EditionValidator {
     }
 
     Optional<Account> foundEmailAccount =
-        accountRepository.findByAccountHolder_EmailAndStatus(request.getEmail(), StatusEnum.ACTIVE);
+        accountRepository.findByAccountHolder_EmailAndStatusIn(
+            request.getEmail(), Arrays.asList(StatusEnum.ACTIVE, StatusEnum.ON_CONFIRM));
 
     if (foundEmailAccount.isPresent()) {
       if (foundEmailAccount.get().getStatus().equals(StatusEnum.ON_CONFIRM)) {
@@ -82,7 +84,8 @@ public class EditionValidator {
     }
 
     Optional<Account> foundEmailAccountOptional =
-        accountRepository.findByAccountHolder_EmailAndStatus(request.getEmail(), StatusEnum.ACTIVE);
+        accountRepository.findByAccountHolder_EmailAndStatusIn(
+            request.getEmail(), Arrays.asList(StatusEnum.ACTIVE, StatusEnum.ON_CONFIRM));
 
     if (foundEmailAccountOptional.isPresent()
         && !foundAccount.getId().equals(foundEmailAccountOptional.get().getId())) {
