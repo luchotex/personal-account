@@ -95,8 +95,7 @@ public class EditionValidator {
             .getAccountAccess()
             .getAuthenticationExpiration()
             .isBefore(LocalDateTime.now())) {
-      throw new InvalidArgumentsException(
-          String.format(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION, request.getId()));
+      throw new InvalidArgumentsException(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION);
     }
     return foundAccount;
   }
@@ -146,9 +145,7 @@ public class EditionValidator {
             .getAccountAccess()
             .getAuthenticationExpiration()
             .isBefore(LocalDateTime.now())) {
-      throw new InvalidArgumentsException(
-          String.format(
-              IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION, request.getAccountNumber()));
+      throw new InvalidArgumentsException(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION);
     }
     return foundAccount;
   }

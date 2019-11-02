@@ -140,7 +140,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public AccountCloseResponse closeAccount(AccountCloseRequest request) {
+  public AccountCloseResponse close(AccountCloseRequest request) {
 
     Optional<Account> foundAccountOptional = accountRepository.findById(request.getAccountNumber());
 

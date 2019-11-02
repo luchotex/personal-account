@@ -52,8 +52,8 @@ public class AccountController {
   }
 
   @DeleteMapping("/close")
-  public ResponseEntity<AccountCloseResponse> closeAccount(
+  public ResponseEntity<AccountCloseResponse> close(
       @RequestBody @Valid AccountCloseRequest request) {
-    return new ResponseEntity<>(accountService.closeAccount(request), HttpStatus.OK);
+    return new ResponseEntity<>(accountService.close(request), HttpStatus.OK);
   }
 }

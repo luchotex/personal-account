@@ -22,5 +22,5 @@ public interface AccountService {
 
   // TODO implement java doc
 
-  AccountCloseResponse closeAccount(AccountCloseRequest request);
+  AccountCloseResponse close(AccountCloseRequest request);
 }
