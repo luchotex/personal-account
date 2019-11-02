@@ -3,6 +3,7 @@ package com.g2.personalaccount.dto.mappers;
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
 import com.g2.personalaccount.dto.responses.AccountResponse;
+import com.g2.personalaccount.dto.responses.AuthenticationResponse;
 import com.g2.personalaccount.model.Account;
 import org.mapstruct.DecoratedWith;
 import org.mapstruct.Mapper;
@@ -36,4 +37,7 @@ public interface AccountMapper {
   @Mapping(target = "accountHolder.lastName", source = "holderLastName")
   @Mapping(target = "accountHolder.accountHolderId.voterCardId", source = "voterCardId")
   void toEntity(AccountUpdateRequest request, @MappingTarget Account account);
+
+  @Mapping(target = "expirationDateTime", source = "accountAccess.authenticationExpiration")
+  AuthenticationResponse toExpirationResponse(Account account);
 }

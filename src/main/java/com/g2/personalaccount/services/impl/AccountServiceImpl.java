@@ -4,13 +4,16 @@ import com.g2.personalaccount.config.ServiceConfig;
 import com.g2.personalaccount.dto.mappers.AccountMapper;
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
+import com.g2.personalaccount.dto.requests.AuthenticationRequest;
 import com.g2.personalaccount.dto.responses.AccountResponse;
-import com.g2.personalaccount.exceptions.InvalidArgumentsException;
+import com.g2.personalaccount.dto.responses.AuthenticationResponse;
 import com.g2.personalaccount.model.Account;
 import com.g2.personalaccount.proxy.EmailProxy;
 import com.g2.personalaccount.repositories.AccountRepository;
 import com.g2.personalaccount.services.AccountService;
 import com.g2.personalaccount.utils.PinGenerator;
+import com.g2.personalaccount.validators.EditionValidator;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +31,16 @@ public class AccountServiceImpl implements AccountService {
   public static final String ACCOUNT_NUMBER_DOESNT_EXISTS = "The account number %s doesn't exists";
   public static final String EMAIL_ALREADY_EXISTS_IN_ANOTHER_ACCOUNT =
       "The email %s already exists in another account";
-  public static final String EMAIL_CORRUPTED_DATA =
-      "There is corrupted data related with the email";
+
+  public static final String PIN_IS_INCORRECT = "The PIN is incorrect for account number: %s";
+  public static final String THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION =
+      "The account number %s is waiting for confirmation";
+  public static final String ACCOUNT_SSN_ON_CONFIRMATION =
+      "The account number %s with SSN %s is waiting for confirmation";
+  public static final String ACCOUNT_EMAIL_ON_CONFIRMATION =
+      "The account number %s with email %s is waiting for confirmation";
+  public static final String IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION =
+      "The account number is not authenticated to perform this operation";
   private Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
   private AccountMapper accountMapper;
@@ -37,18 +48,21 @@ public class AccountServiceImpl implements AccountService {
   private EmailProxy emailProxy;
   private PinGenerator pinGenerator;
   private ServiceConfig serviceConfig;
+  private EditionValidator editionValidator;
 
   public AccountServiceImpl(
       AccountMapper accountMapper,
       AccountRepository accountRepository,
       EmailProxy emailProxy,
       PinGenerator pinGenerator,
-      ServiceConfig serviceConfig) {
+      ServiceConfig serviceConfig,
+      EditionValidator editionValidator) {
     this.accountMapper = accountMapper;
     this.accountRepository = accountRepository;
     this.emailProxy = emailProxy;
     this.pinGenerator = pinGenerator;
     this.serviceConfig = serviceConfig;
+    this.editionValidator = editionValidator;
   }
 
   @Override
@@ -62,21 +76,7 @@ public class AccountServiceImpl implements AccountService {
         request.getSsn(),
         request.getVoterCardId());
 
-    Optional<Account> foundSSNAccount =
-        accountRepository.findByAccountHolder_AccountHolderId_Ssn(request.getSsn());
-
-    if (foundSSNAccount.isPresent()) {
-      throw new InvalidArgumentsException(
-          String.format(ACCOUNT_WITH_SAME_SSN_EXIST, request.getSsn()));
-    }
-
-    Optional<Account> foundEmailAccount =
-        accountRepository.findByAccountHolder_Email(request.getEmail());
-
-    if (foundEmailAccount.isPresent()) {
-      throw new InvalidArgumentsException(
-          String.format(ACCOUNT_WITH_SAME_EMAIL_EXISTS, request.getEmail()));
-    }
+    editionValidator.validateCreation(request);
 
     Integer generatedPin =
         pinGenerator.generateRandom(Integer.valueOf(serviceConfig.getPinLength()));
@@ -108,29 +108,29 @@ public class AccountServiceImpl implements AccountService {
 
     Optional<Account> foundAccountOptional = accountRepository.findById(request.getId());
 
-    if (!foundAccountOptional.isPresent()) {
-      throw new InvalidArgumentsException(
-          String.format(ACCOUNT_NUMBER_DOESNT_EXISTS, request.getId()));
-    }
-
-    Account foundAccount = foundAccountOptional.get();
-
-    Optional<Account> foundEmailAccountOptional =
-        accountRepository.findByAccountHolder_Email(request.getEmail());
-
-    if (!foundEmailAccountOptional.isPresent()) {
-      throw new InvalidArgumentsException(String.format(EMAIL_CORRUPTED_DATA));
-    }
-
-    if (!foundAccount.getId().equals(foundEmailAccountOptional.get().getId())) {
-      throw new InvalidArgumentsException(
-          String.format(EMAIL_ALREADY_EXISTS_IN_ANOTHER_ACCOUNT, request.getEmail()));
-    }
+    Account foundAccount = editionValidator.validateUpdate(request, foundAccountOptional);
 
     accountMapper.toEntity(request, foundAccount);
 
     foundAccount = accountRepository.save(foundAccount);
 
     return accountMapper.toResponse(foundAccount);
+  }
+
+  @Override
+  public AuthenticationResponse authenticateAccount(AuthenticationRequest request) {
+    Optional<Account> foundAccountOptional = accountRepository.findById(request.getAccountNumber());
+
+    Account foundAccount = editionValidator.validateAuthentication(request, foundAccountOptional);
+
+    foundAccount
+        .getAccountAccess()
+        .setAuthenticationExpiration(
+            LocalDateTime.now()
+                .plusSeconds(Integer.valueOf(serviceConfig.getPinExpirationSeconds())));
+
+    foundAccount = accountRepository.save(foundAccount);
+
+    return accountMapper.toExpirationResponse(foundAccount);
   }
 }

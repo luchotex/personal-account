@@ -13,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 @Data
 public class ServiceConfig {
   private String hostname;
-  private String expirationSeconds;
+  private String confirmationExpirationSeconds;
   private String pinLength;
+  private String pinExpirationSeconds;
 }
