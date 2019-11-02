@@ -97,6 +97,7 @@ public class AccountServiceImplTest {
 
     verify(accountRepository, times(1)).save(accountArgumentCaptor.capture());
     verify(emailProxy, times(1)).sendPin(anyString(), anyInt());
+    verify(emailProxy, times(1)).sendConfirmation(anyString(), anyString(), anyString());
 
     Account savingValue = accountArgumentCaptor.getValue();
 

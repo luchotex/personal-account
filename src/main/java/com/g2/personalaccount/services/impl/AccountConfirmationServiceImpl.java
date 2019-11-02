@@ -16,6 +16,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class AccountConfirmationServiceImpl implements AccountConfirmationService {
 
+  public static final String CONFIRMATION_DOESNT_EXIST_TEMPLATE = "confirmation-doesnt-exist";
+  public static final String CONFIRMATION_ALREADY_EXECUTED_TEMPLATE =
+      "confirmation-already-executed";
+  public static final String CONFIRMATION_HAS_EXPIRED_TEMPLATE = "confirmation-has-expired";
+  public static final String CONFIRMATION_SUCCESSFUL_TEMPLATE = "confirmation";
   private AccountConfirmationRepository accountConfirmationRepository;
 
   public AccountConfirmationServiceImpl(
@@ -30,25 +35,25 @@ public class AccountConfirmationServiceImpl implements AccountConfirmationServic
         accountConfirmationRepository.findByConfirmationId(confirmationId);
 
     if (!accountConfirmation.isPresent()) {
-      return "confirmation-doesnt-exist";
+      return CONFIRMATION_DOESNT_EXIST_TEMPLATE;
     }
 
     AccountConfirmation confirmation = accountConfirmation.get();
 
     if (confirmation.getConfirmationStatusEnum().equals(ConfirmationStatusEnum.CONFIRMED)) {
-      return "confirmation-already-executed";
+      return CONFIRMATION_ALREADY_EXECUTED_TEMPLATE;
     }
 
     LocalDateTime now = LocalDateTime.now();
 
     if (confirmation.getExpirationDate().isBefore(now)) {
-      return "confirmation-has-expired";
+      return CONFIRMATION_HAS_EXPIRED_TEMPLATE;
     }
 
     confirmation.setConfirmationStatusEnum(ConfirmationStatusEnum.CONFIRMED);
     confirmation.getAccount().setStatus(StatusEnum.ACTIVE);
     accountConfirmationRepository.save(confirmation);
 
-    return "confirmation";
+    return CONFIRMATION_SUCCESSFUL_TEMPLATE;
   }
 }

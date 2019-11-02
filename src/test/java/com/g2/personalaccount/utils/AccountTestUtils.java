@@ -60,6 +60,7 @@ public class AccountTestUtils {
     account.setAccountAccess(accountAccess);
 
     AccountConfirmation confirmation = new AccountConfirmation();
+    confirmation.setConfirmationId("234234asad");
     account.setAccountConfirmation(confirmation);
 
     return account;
