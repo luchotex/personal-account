@@ -7,7 +7,9 @@ import static com.g2.personalaccount.services.impl.AccountServiceImpl.EMAIL_ALRE
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.EMAIL_CORRUPTED_DATA;
 import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -31,6 +33,8 @@ import com.g2.personalaccount.services.AccountService;
 import com.g2.personalaccount.utils.AccountTestUtils;
 import com.g2.personalaccount.utils.PinGenerator;
 import java.util.Optional;
+import java.util.Set;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,6 +44,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 
 /** This Kind of test was necessary due to using of decorators, so we need to autowire the mapper */
 @ActiveProfiles("dev")
@@ -65,6 +74,7 @@ public class AccountServiceImplTest {
   @MockBean private EmailProxy emailProxy;
   private PinGenerator pinGenerator;
   @Autowired private ServiceConfig serviceConfig;
+  private Validator validator;
 
   @Before
   public void setUp() {
@@ -72,6 +82,9 @@ public class AccountServiceImplTest {
     accountService =
         new AccountServiceImpl(
             accountMapper, accountRepository, emailProxy, pinGenerator, serviceConfig);
+
+    ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+    validator = factory.getValidator();
   }
 
   @Test
@@ -91,6 +104,9 @@ public class AccountServiceImplTest {
     AccountResponse response = accountService.create(request);
 
     // then
+    Set<ConstraintViolation<AccountRequest>> violations = validator.validate(request);
+    assertTrue(violations.isEmpty());
+
     assertNotNull(response);
 
     ArgumentCaptor<Account> accountArgumentCaptor = ArgumentCaptor.forClass(Account.class);
@@ -139,6 +155,60 @@ public class AccountServiceImplTest {
     assertEquals(
         returnedAccount.getAccountHolder().getAccountHolderId().getVoterCardId(),
         response.getVoterCardId());
+  }
+
+  @Test
+  public void create_incorrectNameFormat() {
+
+    // given
+    AccountRequest request = AccountTestUtils.createAccountRequest();
+    request.setHolderFirstName("test123");
+
+    // then
+    Set<ConstraintViolation<AccountRequest>> violations = validator.validate(request);
+    assertFalse(violations.isEmpty());
+    Optional<ConstraintViolation<AccountRequest>> optionalViolation =
+        violations.stream()
+            .filter(
+                v ->
+                    v.getMessage()
+                        .contains("The first name must contain only characters or letters"))
+            .findFirst();
+    assertTrue(optionalViolation.isPresent());
+  }
+
+  @Test
+  public void create_incorrectEmailFormat() {
+
+    // given
+    AccountRequest request = AccountTestUtils.createAccountRequest();
+    request.setEmail("test");
+
+    // then
+    Set<ConstraintViolation<AccountRequest>> violations = validator.validate(request);
+    assertFalse(violations.isEmpty());
+    Optional<ConstraintViolation<AccountRequest>> optionalViolation =
+        violations.stream()
+            .filter(v -> v.getMessage().contains("Email must have valid format"))
+            .findFirst();
+    assertTrue(optionalViolation.isPresent());
+  }
+
+  @Test
+  public void create_incorrectSsnLength() {
+
+    // given
+    AccountRequest request = AccountTestUtils.createAccountRequest();
+    request.setSsn(123L);
+
+    // then
+    Set<ConstraintViolation<AccountRequest>> violations = validator.validate(request);
+    assertFalse(violations.isEmpty());
+    Optional<ConstraintViolation<AccountRequest>> optionalViolation =
+        violations.stream()
+            .filter(v -> v.getMessage().contains("SSN must be 9 digit number"))
+            .findFirst();
+    assertTrue(optionalViolation.isPresent());
   }
 
   @Test
@@ -210,6 +280,9 @@ public class AccountServiceImplTest {
 
     // then
     assertNotNull(response);
+
+    Set<ConstraintViolation<AccountUpdateRequest>> violations = validator.validate(request);
+    assertTrue(violations.isEmpty());
 
     ArgumentCaptor<Account> accountArgumentCaptor = ArgumentCaptor.forClass(Account.class);
 

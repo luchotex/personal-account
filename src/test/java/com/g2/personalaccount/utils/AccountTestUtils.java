@@ -21,7 +21,7 @@ public class AccountTestUtils {
     request.setHolderFirstName("Test first Name");
     request.setHolderLastName("Test last Name");
     request.setEmail("email@test.com");
-    request.setSsn(12332442L);
+    request.setSsn(123324242L);
     request.setVoterCardId(12332442L);
 
     return request;
@@ -60,7 +60,7 @@ public class AccountTestUtils {
     account.setAccountAccess(accountAccess);
 
     AccountConfirmation confirmation = new AccountConfirmation();
-    confirmation.setConfirmationId("234234asad");
+    confirmation.setConfirmationId("234234asad  ");
     account.setAccountConfirmation(confirmation);
 
     return account;
