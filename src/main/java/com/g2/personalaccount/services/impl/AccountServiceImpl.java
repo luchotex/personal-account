@@ -46,6 +46,7 @@ public class AccountServiceImpl implements AccountService {
   public static final String IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION =
       "The account number is not authenticated to perform this operation";
   public static final String ALREADY_CLOSED_ACCOUNT = "The account number %s is already closed";
+  public static final String ACCOUNT_IS_LOCKED = "The account is locked, please wait until %s";
   private Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
   private AccountMapper accountMapper;
@@ -133,6 +134,8 @@ public class AccountServiceImpl implements AccountService {
         .setAuthenticationExpiration(
             LocalDateTime.now()
                 .plusSeconds(Integer.valueOf(serviceConfig.getPinExpirationSeconds())));
+    foundAccount.getAccountAccess().setAuthenticationLocking(null);
+    foundAccount.getAccountAccess().setNumberRetries(0);
 
     foundAccount = accountRepository.save(foundAccount);
 
