@@ -1,6 +1,7 @@
 package com.g2.personalaccount.validators;
 
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_EMAIL_ON_CONFIRMATION;
+import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_IS_LOCKED;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_NUMBER_DOESNT_EXISTS;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_SSN_ON_CONFIRMATION;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_WITH_SAME_EMAIL_EXISTS;
@@ -12,16 +13,19 @@ import static com.g2.personalaccount.services.impl.AccountServiceImpl.PIN_IS_INC
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.THE_ACCOUNT_IS_CLOSED;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION;
 
+import com.g2.personalaccount.config.ServiceConfig;
 import com.g2.personalaccount.dto.requests.AccountCloseRequest;
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
 import com.g2.personalaccount.dto.requests.AuthenticationRequest;
 import com.g2.personalaccount.exceptions.InvalidArgumentsException;
+import com.g2.personalaccount.exceptions.ResourceNotFoundException;
 import com.g2.personalaccount.model.Account;
 import com.g2.personalaccount.model.enumerated.StatusEnum;
 import com.g2.personalaccount.repositories.AccountRepository;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
 
@@ -33,9 +37,11 @@ import org.springframework.stereotype.Component;
 public class EditionValidator {
 
   private AccountRepository accountRepository;
+  private ServiceConfig serviceConfig;
 
-  public EditionValidator(AccountRepository accountRepository) {
+  public EditionValidator(AccountRepository accountRepository, ServiceConfig serviceConfig) {
     this.accountRepository = accountRepository;
+    this.serviceConfig = serviceConfig;
   }
 
   public void validateCreation(AccountRequest request) {
@@ -90,6 +96,8 @@ public class EditionValidator {
           String.format(EMAIL_ALREADY_EXISTS_IN_ANOTHER_ACCOUNT, request.getEmail()));
     }
 
+    validateLockingAccount(foundAccount);
+
     if (foundAccount.getAccountAccess().getAuthenticationExpiration() == null
         || foundAccount
             .getAccountAccess()
@@ -97,12 +105,13 @@ public class EditionValidator {
             .isBefore(LocalDateTime.now())) {
       throw new InvalidArgumentsException(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION);
     }
+
     return foundAccount;
   }
 
   private Account validateExistConfirmation(Optional<Account> foundAccountOptional, Long id) {
     if (!foundAccountOptional.isPresent()) {
-      throw new InvalidArgumentsException(String.format(ACCOUNT_NUMBER_DOESNT_EXISTS, id));
+      throw new ResourceNotFoundException(String.format(ACCOUNT_NUMBER_DOESNT_EXISTS, id));
     }
 
     Account foundAccount = foundAccountOptional.get();
@@ -124,10 +133,54 @@ public class EditionValidator {
     }
 
     if (!foundAccount.getAccountAccess().getPin().equals(request.getPin())) {
-      throw new InvalidArgumentsException(
-          String.format(PIN_IS_INCORRECT, request.getAccountNumber()));
+      validateIncorrectPin(request, foundAccount);
+    } else {
+      validateLockingAccount(foundAccount);
     }
+
     return foundAccount;
+  }
+
+  private void validateIncorrectPin(AuthenticationRequest request, Account foundAccount) {
+    LocalDateTime now = LocalDateTime.now();
+
+    LocalDateTime lockingDateTime = foundAccount.getAccountAccess().getAuthenticationLocking();
+
+    Integer numberOfRetries = retrieveNumberEntries(foundAccount, lockingDateTime, now);
+
+    foundAccount.getAccountAccess().setNumberRetries(numberOfRetries);
+
+    if (foundAccount.getAccountAccess().getNumberRetries()
+        >= Integer.valueOf(serviceConfig.getNumberPinRetries())) {
+      foundAccount
+          .getAccountAccess()
+          .setAuthenticationLocking(
+              now.plusSeconds(Integer.valueOf(serviceConfig.getAccountLockingSeconds())));
+    }
+
+    accountRepository.save(foundAccount);
+    validateLockingAccount(foundAccount);
+
+    throw new InvalidArgumentsException(
+        String.format(PIN_IS_INCORRECT, request.getAccountNumber()));
+  }
+
+  private Integer retrieveNumberEntries(
+      Account foundAccount, LocalDateTime lockingDateTime, LocalDateTime now) {
+    Integer numberEntries;
+
+    if (!Objects.isNull(foundAccount.getAccountAccess().getNumberRetries())) {
+      if (!Objects.isNull(lockingDateTime) && (lockingDateTime.isBefore(now))) {
+        numberEntries = 1;
+        foundAccount.getAccountAccess().setAuthenticationLocking(null);
+      } else {
+        numberEntries = foundAccount.getAccountAccess().getNumberRetries() + 1;
+      }
+    } else {
+      numberEntries = 1;
+    }
+
+    return numberEntries;
   }
 
   public Account closeAccountValidations(
@@ -140,6 +193,8 @@ public class EditionValidator {
           String.format(ALREADY_CLOSED_ACCOUNT, request.getAccountNumber()));
     }
 
+    validateLockingAccount(foundAccount);
+
     if (foundAccount.getAccountAccess().getAuthenticationExpiration() == null
         || foundAccount
             .getAccountAccess()
@@ -148,5 +203,17 @@ public class EditionValidator {
       throw new InvalidArgumentsException(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION);
     }
     return foundAccount;
+  }
+
+  private void validateLockingAccount(Account foundAccount) {
+    LocalDateTime now = LocalDateTime.now();
+
+    LocalDateTime lockingDateTime = foundAccount.getAccountAccess().getAuthenticationLocking();
+
+    if (lockingDateTime != null && (lockingDateTime.isAfter(now))) {
+      throw new InvalidArgumentsException(
+          String.format(
+              ACCOUNT_IS_LOCKED, foundAccount.getAccountAccess().getAuthenticationLocking()));
+    }
   }
 }

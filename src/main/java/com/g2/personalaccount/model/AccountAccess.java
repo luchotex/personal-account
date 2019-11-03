@@ -35,4 +35,10 @@ public class AccountAccess extends EditionDates {
 
   @Column(name = "authentication_expiration")
   private LocalDateTime authenticationExpiration;
+
+  @Column(name = "number_retries")
+  private Integer numberRetries;
+
+  @Column(name = "authentication_locking")
+  private LocalDateTime authenticationLocking;
 }

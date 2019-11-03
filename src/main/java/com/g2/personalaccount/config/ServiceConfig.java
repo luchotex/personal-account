@@ -16,4 +16,6 @@ public class ServiceConfig {
   private String confirmationExpirationSeconds;
   private String pinLength;
   private String pinExpirationSeconds;
+  private String numberPinRetries;
+  private String accountLockingSeconds;
 }

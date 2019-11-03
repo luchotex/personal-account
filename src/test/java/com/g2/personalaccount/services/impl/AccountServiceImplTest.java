@@ -1,6 +1,7 @@
 package com.g2.personalaccount.services.impl;
 
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_EMAIL_ON_CONFIRMATION;
+import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_IS_LOCKED;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_NUMBER_DOESNT_EXISTS;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_SSN_ON_CONFIRMATION;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_WITH_SAME_EMAIL_EXISTS;
@@ -35,6 +36,7 @@ import com.g2.personalaccount.dto.responses.AccountCloseResponse;
 import com.g2.personalaccount.dto.responses.AccountResponse;
 import com.g2.personalaccount.dto.responses.AuthenticationResponse;
 import com.g2.personalaccount.exceptions.InvalidArgumentsException;
+import com.g2.personalaccount.exceptions.ResourceNotFoundException;
 import com.g2.personalaccount.model.Account;
 import com.g2.personalaccount.model.enumerated.StatusEnum;
 import com.g2.personalaccount.proxy.EmailProxy;
@@ -75,7 +77,9 @@ import org.springframework.test.context.junit4.SpringRunner;
       "SERVICE_URL=http://192.168.0.101:8080",
       "CONFIRMATION_EXPIRATION_SECONDS=8640",
       "PIN_LENGTH=4",
-      "PIN_EXPIRATION_SECONDS=180"
+      "PIN_EXPIRATION_SECONDS=180",
+      "NUMBER_PIN_RETRIES=5",
+      "ACCOUNT_LOCKING_SECONDS=86400"
     })
 public class AccountServiceImplTest {
 
@@ -90,7 +94,7 @@ public class AccountServiceImplTest {
 
   @Before
   public void setUp() {
-    editionValidator = new EditionValidator(accountRepository);
+    editionValidator = new EditionValidator(accountRepository, serviceConfig);
     pinGenerator = new PinGenerator();
     accountService =
         new AccountServiceImpl(
@@ -582,7 +586,7 @@ public class AccountServiceImplTest {
       when(accountRepository.findById(anyLong())).thenReturn(Optional.empty());
       AccountResponse response = accountService.updatePersonalData(request);
       // when
-    } catch (InvalidArgumentsException ex) {
+    } catch (ResourceNotFoundException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
       assertEquals(String.format(ACCOUNT_NUMBER_DOESNT_EXISTS, request.getId()), ex.getMessage());
@@ -690,7 +694,36 @@ public class AccountServiceImplTest {
   }
 
   @Test
-  public void update_AuthenticationExpired() {
+  public void update_accountLocked() {
+
+    // given
+    AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
+    Account foundAccount = AccountTestUtils.createUpdateAccount(request);
+    Account emailFoundAccount = AccountTestUtils.createUpdateAccount(request);
+    foundAccount.getAccountAccess().setAuthenticationLocking(LocalDateTime.now().plusSeconds(100));
+
+    try {
+      // when
+
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+
+      when(accountRepository.findByAccountHolder_EmailAndStatusIn(anyString(), any()))
+          .thenReturn(Optional.of(emailFoundAccount));
+      AccountResponse response = accountService.updatePersonalData(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+      verify(accountRepository, times(1)).findById(anyLong());
+      verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
+      assertEquals(
+          String.format(
+              ACCOUNT_IS_LOCKED, foundAccount.getAccountAccess().getAuthenticationLocking()),
+          ex.getMessage());
+    }
+  }
+
+  @Test
+  public void update_authenticationExpired() {
 
     // given
     AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
@@ -765,7 +798,7 @@ public class AccountServiceImplTest {
       when(accountRepository.findById(anyLong())).thenReturn(Optional.empty());
       AuthenticationResponse response = accountService.authenticateAccount(request);
       // when
-    } catch (InvalidArgumentsException ex) {
+    } catch (ResourceNotFoundException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
       assertEquals(
@@ -840,12 +873,211 @@ public class AccountServiceImplTest {
     try {
       // when
       when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+      when(accountRepository.save(any())).thenReturn(foundAccount);
+      AuthenticationResponse response = accountService.authenticateAccount(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+
+      ArgumentCaptor<Account> accountArgumentCaptor = ArgumentCaptor.forClass(Account.class);
+      verify(accountRepository, times(1)).findById(anyLong());
+      verify(accountRepository, times(1)).save(accountArgumentCaptor.capture());
+
+      Account savingValue = accountArgumentCaptor.getValue();
+
+      assertTrue(savingValue.getAccountAccess().getNumberRetries().equals(1));
+      assertNull(savingValue.getAccountAccess().getAuthenticationLocking());
+
+      assertEquals(String.format(PIN_IS_INCORRECT, request.getAccountNumber()), ex.getMessage());
+    }
+  }
+
+  @Test
+  public void authenticate_pinIncorrectMoreThanOneRetry() {
+
+    // given
+    AuthenticationRequest request = new AuthenticationRequest();
+    request.setAccountNumber(1233252351L);
+    request.setPin("234235432asds13sdf");
+
+    Account foundAccount =
+        AccountTestUtils.createUpdateAccount(AccountTestUtils.createAccountUpdateRequest());
+    foundAccount.setStatus(StatusEnum.ACTIVE);
+    foundAccount.getAccountAccess().setPin("4324123fdjgkld");
+    foundAccount.getAccountAccess().setNumberRetries(3);
+
+    try {
+      // when
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+      when(accountRepository.save(any())).thenReturn(foundAccount);
+      AuthenticationResponse response = accountService.authenticateAccount(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+
+      ArgumentCaptor<Account> accountArgumentCaptor = ArgumentCaptor.forClass(Account.class);
+      verify(accountRepository, times(1)).findById(anyLong());
+      verify(accountRepository, times(1)).save(accountArgumentCaptor.capture());
+
+      Account savingValue = accountArgumentCaptor.getValue();
+
+      assertTrue(savingValue.getAccountAccess().getNumberRetries().equals(4));
+      assertNull(savingValue.getAccountAccess().getAuthenticationLocking());
+
+      assertEquals(String.format(PIN_IS_INCORRECT, request.getAccountNumber()), ex.getMessage());
+    }
+  }
+
+  @Test
+  public void authenticate_pinIncorrectLockingAccount() {
+
+    // given
+    AuthenticationRequest request = new AuthenticationRequest();
+    request.setAccountNumber(1233252351L);
+    request.setPin("234235432asds13sdf");
+
+    Account foundAccount =
+        AccountTestUtils.createUpdateAccount(AccountTestUtils.createAccountUpdateRequest());
+    foundAccount.setStatus(StatusEnum.ACTIVE);
+    foundAccount.getAccountAccess().setPin("4324123fdjgkld");
+    foundAccount.getAccountAccess().setNumberRetries(4);
+
+    try {
+      // when
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+      when(accountRepository.save(any())).thenReturn(foundAccount);
+      AuthenticationResponse response = accountService.authenticateAccount(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+
+      ArgumentCaptor<Account> accountArgumentCaptor = ArgumentCaptor.forClass(Account.class);
+      verify(accountRepository, times(1)).findById(anyLong());
+      verify(accountRepository, times(1)).save(accountArgumentCaptor.capture());
+
+      Account savingValue = accountArgumentCaptor.getValue();
+
+      assertTrue(savingValue.getAccountAccess().getNumberRetries().equals(5));
+      assertNotNull(savingValue.getAccountAccess().getAuthenticationLocking());
+      assertTrue(
+          savingValue.getAccountAccess().getAuthenticationLocking().isAfter(LocalDateTime.now()));
+      assertEquals(
+          String.format(
+              ACCOUNT_IS_LOCKED, foundAccount.getAccountAccess().getAuthenticationLocking()),
+          ex.getMessage());
+    }
+  }
+
+  @Test
+  public void authenticate_pinIncorrectLockingDateExpired() {
+
+    // given
+    AuthenticationRequest request = new AuthenticationRequest();
+    request.setAccountNumber(1233252351L);
+    request.setPin("234235432asds13sdf");
+
+    Account foundAccount =
+        AccountTestUtils.createUpdateAccount(AccountTestUtils.createAccountUpdateRequest());
+    foundAccount.setStatus(StatusEnum.ACTIVE);
+    foundAccount.getAccountAccess().setPin("4324123fdjgkld");
+    foundAccount.getAccountAccess().setNumberRetries(4);
+    foundAccount.getAccountAccess().setAuthenticationLocking(LocalDateTime.now().minusSeconds(100));
+
+    try {
+      // when
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+      when(accountRepository.save(any())).thenReturn(foundAccount);
+      AuthenticationResponse response = accountService.authenticateAccount(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+
+      ArgumentCaptor<Account> accountArgumentCaptor = ArgumentCaptor.forClass(Account.class);
+      verify(accountRepository, times(1)).findById(anyLong());
+      verify(accountRepository, times(1)).save(accountArgumentCaptor.capture());
+
+      Account savingValue = accountArgumentCaptor.getValue();
+
+      assertTrue(savingValue.getAccountAccess().getNumberRetries().equals(1));
+      assertNull(savingValue.getAccountAccess().getAuthenticationLocking());
+
+      assertEquals(String.format(PIN_IS_INCORRECT, request.getAccountNumber()), ex.getMessage());
+    }
+  }
+
+  @Test
+  public void authenticate_accountAlreadyLockedIncorrectPin() {
+
+    // given
+    AuthenticationRequest request = new AuthenticationRequest();
+    request.setAccountNumber(1233252351L);
+    request.setPin("234235432asds13sdf");
+
+    Account foundAccount =
+        AccountTestUtils.createUpdateAccount(AccountTestUtils.createAccountUpdateRequest());
+    foundAccount.setStatus(StatusEnum.ACTIVE);
+    foundAccount.getAccountAccess().setPin("4324123fdjgkld");
+    foundAccount.getAccountAccess().setNumberRetries(5);
+    foundAccount.getAccountAccess().setAuthenticationLocking(LocalDateTime.now().plusSeconds(100));
+
+    try {
+      // when
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+      when(accountRepository.save(any())).thenReturn(foundAccount);
+      AuthenticationResponse response = accountService.authenticateAccount(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+
+      ArgumentCaptor<Account> accountArgumentCaptor = ArgumentCaptor.forClass(Account.class);
+      verify(accountRepository, times(1)).findById(anyLong());
+      verify(accountRepository, times(1)).save(accountArgumentCaptor.capture());
+
+      Account savingValue = accountArgumentCaptor.getValue();
+
+      assertTrue(savingValue.getAccountAccess().getNumberRetries().equals(6));
+      assertNotNull(savingValue.getAccountAccess().getAuthenticationLocking());
+      assertTrue(
+          savingValue
+              .getAccountAccess()
+              .getAuthenticationLocking()
+              .equals(foundAccount.getAccountAccess().getAuthenticationLocking()));
+
+      assertEquals(
+          String.format(
+              ACCOUNT_IS_LOCKED, foundAccount.getAccountAccess().getAuthenticationLocking()),
+          ex.getMessage());
+    }
+  }
+
+  @Test
+  public void authenticate_accountAlreadyLockedCorrectPin() {
+
+    // given
+    AuthenticationRequest request = new AuthenticationRequest();
+    request.setAccountNumber(1233252351L);
+    request.setPin("4324123fdjgkld");
+
+    Account foundAccount =
+        AccountTestUtils.createUpdateAccount(AccountTestUtils.createAccountUpdateRequest());
+    foundAccount.setStatus(StatusEnum.ACTIVE);
+    foundAccount.getAccountAccess().setPin("4324123fdjgkld");
+    foundAccount.getAccountAccess().setNumberRetries(5);
+    foundAccount.getAccountAccess().setAuthenticationLocking(LocalDateTime.now().plusSeconds(100));
+
+    try {
+      // when
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
       AuthenticationResponse response = accountService.authenticateAccount(request);
       // when
     } catch (InvalidArgumentsException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
-      assertEquals(String.format(PIN_IS_INCORRECT, request.getAccountNumber()), ex.getMessage());
+
+      assertEquals(
+          String.format(
+              ACCOUNT_IS_LOCKED, foundAccount.getAccountAccess().getAuthenticationLocking()),
+          ex.getMessage());
     }
   }
 
@@ -860,7 +1092,7 @@ public class AccountServiceImplTest {
       when(accountRepository.findById(anyLong())).thenReturn(Optional.empty());
       AccountCloseResponse response = accountService.close(request);
       // when
-    } catch (InvalidArgumentsException ex) {
+    } catch (ResourceNotFoundException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
       assertEquals(
@@ -966,7 +1198,33 @@ public class AccountServiceImplTest {
   }
 
   @Test
-  public void closed_AuthenticationExpired() {
+  public void closed_lockedAccount() {
+
+    // given
+    AccountCloseRequest request = AccountTestUtils.createAccountClosed();
+    AccountUpdateRequest updateRequest = AccountTestUtils.createAccountUpdateRequest();
+    Account foundAccount = AccountTestUtils.createUpdateAccount(updateRequest);
+    foundAccount.getAccountAccess().setAuthenticationLocking(LocalDateTime.now().plusSeconds(100));
+
+    try {
+      // when
+
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+
+      AccountCloseResponse response = accountService.close(request);
+      // when
+    } catch (InvalidArgumentsException ex) {
+      // then
+      verify(accountRepository, times(1)).findById(anyLong());
+      assertEquals(
+          String.format(
+              ACCOUNT_IS_LOCKED, foundAccount.getAccountAccess().getAuthenticationLocking()),
+          ex.getMessage());
+    }
+  }
+
+  @Test
+  public void closed_authenticationExpired() {
 
     // given
     AccountCloseRequest request = AccountTestUtils.createAccountClosed();

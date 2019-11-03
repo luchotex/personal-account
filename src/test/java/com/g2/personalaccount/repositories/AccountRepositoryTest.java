@@ -24,7 +24,13 @@ import org.springframework.test.context.junit4.SpringRunner;
       "MAIL_HOST=smtp.gmail.com",
       "MAIL_USERNAME=g2testservices@gmail.com",
       "MAIL_PASSWORD=Testg2123@",
-      "MAIL_PORT=587"
+      "MAIL_PORT=587",
+      "SERVICE_URL=http://192.168.0.101:8080",
+      "CONFIRMATION_EXPIRATION_SECONDS=8640",
+      "PIN_LENGTH=4",
+      "PIN_EXPIRATION_SECONDS=180",
+      "NUMBER_PIN_RETRIES=5",
+      "ACCOUNT_LOCKING_SECONDS=86400"
     })
 public class AccountRepositoryTest {
 
