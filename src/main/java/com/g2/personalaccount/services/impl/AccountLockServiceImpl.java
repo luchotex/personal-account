@@ -1,4 +1,4 @@
-package com.g2.personalaccount.services;
+package com.g2.personalaccount.services.impl;
 
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.THE_ACCOUNT_IS_CLOSED;
 
@@ -8,6 +8,7 @@ import com.g2.personalaccount.model.Account;
 import com.g2.personalaccount.model.AccountLock;
 import com.g2.personalaccount.repositories.AccountLockRepository;
 import com.g2.personalaccount.repositories.AccountRepository;
+import com.g2.personalaccount.services.AccountLockService;
 import com.g2.personalaccount.validators.EditionValidator;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -18,6 +19,8 @@ import java.util.Optional;
  */
 public class AccountLockServiceImpl implements AccountLockService {
 
+  public static final String ACCOUNT_TRANSFERING_LOCKED =
+      "The account number %s is locking to perform money movements";
   private AccountRepository accountRepository;
   private AccountLockRepository accountLockRepository;
   private EditionValidator editionValidator;
@@ -61,8 +64,7 @@ public class AccountLockServiceImpl implements AccountLockService {
         accountLockRepository.save(accountLock);
       } else {
         throw new InvalidArgumentsException(
-            String.format(
-                "The account number %s is locking to perform money movements", accountNumber));
+            String.format(ACCOUNT_TRANSFERING_LOCKED, accountNumber));
       }
     }
   }

@@ -13,6 +13,9 @@ import java.time.LocalDateTime;
  */
 public class AccountConfirmationTestUtils {
 
+  private AccountConfirmationTestUtils() {
+  }
+
   public static AccountConfirmation createAccountConfirmation() {
     AccountConfirmation confirmation = new AccountConfirmation();
     confirmation.setExpirationDate(LocalDateTime.now().plusSeconds(10000));
