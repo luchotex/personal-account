@@ -19,14 +19,12 @@ import com.g2.personalaccount.model.enumerated.StatusEnum;
 import com.g2.personalaccount.model.enumerated.TypeEnum;
 import com.g2.personalaccount.proxy.EmailProxy;
 import com.g2.personalaccount.repositories.AccountRepository;
-import com.g2.personalaccount.repositories.BalanceRepository;
 import com.g2.personalaccount.services.AccountLockService;
 import com.g2.personalaccount.services.AccountService;
 import com.g2.personalaccount.services.BalanceService;
 import com.g2.personalaccount.transaction.TransactionLogging;
 import com.g2.personalaccount.utils.PinGenerator;
 import com.g2.personalaccount.validators.EditionValidator;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -67,7 +65,6 @@ public class AccountServiceImpl implements AccountService {
   private PinGenerator pinGenerator;
   private ServiceConfig serviceConfig;
   private EditionValidator editionValidator;
-  private BalanceRepository balanceRepository;
   private BalanceService balanceService;
   private AccountLockService accountLockService;
   private AuthenticationMapper authenticationMapper;
@@ -79,7 +76,6 @@ public class AccountServiceImpl implements AccountService {
       PinGenerator pinGenerator,
       ServiceConfig serviceConfig,
       EditionValidator editionValidator,
-      BalanceRepository balanceRepository,
       BalanceService balanceService,
       AccountLockService accountLockService,
       AuthenticationMapper authenticationMapper) {
@@ -89,7 +85,6 @@ public class AccountServiceImpl implements AccountService {
     this.pinGenerator = pinGenerator;
     this.serviceConfig = serviceConfig;
     this.editionValidator = editionValidator;
-    this.balanceRepository = balanceRepository;
     this.balanceService = balanceService;
     this.accountLockService = accountLockService;
     this.authenticationMapper = authenticationMapper;
@@ -154,9 +149,6 @@ public class AccountServiceImpl implements AccountService {
   @TransactionLogging(TypeEnum.AUTHENTICATE)
   public AuthenticationResponse authenticateAccount(AuthenticationRequest request) {
 
-    List<Balance> balances =
-        balanceRepository.retrieveBalances(request.getAccountNumber(), new BigDecimal(10));
-
     Optional<Account> foundAccountOptional = accountRepository.findById(request.getAccountNumber());
 
     Account foundAccount = editionValidator.validateAuthentication(request, foundAccountOptional);
@@ -187,7 +179,6 @@ public class AccountServiceImpl implements AccountService {
     foundAccount.setStatus(StatusEnum.INACTIVE);
     accountRepository.save(foundAccount);
 
-    // TODO complete response
     return new AccountCloseResponse();
   }
 

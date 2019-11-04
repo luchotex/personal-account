@@ -36,7 +36,6 @@ public class TransactionAspect {
   private TransactionRepository transactionRepository;
   private AccountRepository accountRepository;
   private AccountConfirmationRepository accountConfirmationRepository;
-  private TypeEnum type;
 
   public TransactionAspect(
       TransactionRepository transactionRepository,
@@ -66,7 +65,7 @@ public class TransactionAspect {
       final long executionTime = System.currentTimeMillis() - start;
 
       Transaction transaction = new Transaction();
-      type = transactionLogging.value();
+      TypeEnum type = transactionLogging.value();
       transaction.setType(type);
       transaction.setElapsedSeconds((int) executionTime);
       transaction.setErrorMessage(message);

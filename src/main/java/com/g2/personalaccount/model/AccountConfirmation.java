@@ -43,7 +43,6 @@ public class AccountConfirmation {
   @OneToOne(mappedBy = "accountConfirmation")
   private Account account;
 
-  // TODO add index
   @Column(name = "confirmation_id")
   private String confirmationId;
 }

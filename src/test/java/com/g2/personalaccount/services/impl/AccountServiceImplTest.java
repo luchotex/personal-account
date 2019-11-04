@@ -42,7 +42,6 @@ import com.g2.personalaccount.model.Account;
 import com.g2.personalaccount.model.enumerated.StatusEnum;
 import com.g2.personalaccount.proxy.EmailProxy;
 import com.g2.personalaccount.repositories.AccountRepository;
-import com.g2.personalaccount.repositories.BalanceRepository;
 import com.g2.personalaccount.services.AccountLockService;
 import com.g2.personalaccount.services.AccountService;
 import com.g2.personalaccount.services.BalanceService;
@@ -95,7 +94,6 @@ public class AccountServiceImplTest {
   @Autowired private ServiceConfig serviceConfig;
   private Validator validator;
   private EditionValidator editionValidator;
-  @MockBean private BalanceRepository balanceRepository;
   @MockBean private BalanceService balanceService;
   @MockBean private AccountLockService accountLockService;
   @Autowired private AuthenticationMapper authenticationMapper;
@@ -112,7 +110,6 @@ public class AccountServiceImplTest {
             pinGenerator,
             serviceConfig,
             editionValidator,
-            balanceRepository,
             balanceService,
             accountLockService,
             authenticationMapper);
