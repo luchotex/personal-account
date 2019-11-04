@@ -75,7 +75,6 @@ public class AccountRepositoryTest {
     AccountRequest request = AccountTestUtils.createAccountRequest();
     Account account = AccountTestUtils.createAccount(request);
     account.setId(null);
-    Thread.sleep(500);
 
     // when
     Account savedAccount = accountRepository.save(account);
