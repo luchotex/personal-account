@@ -5,13 +5,18 @@ import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
 import com.g2.personalaccount.dto.requests.AuthenticationRequest;
 import com.g2.personalaccount.dto.responses.AccountCloseResponse;
+import com.g2.personalaccount.dto.responses.AccountLastTransactionsResponse;
 import com.g2.personalaccount.dto.responses.AccountResponse;
 import com.g2.personalaccount.dto.responses.AuthenticationResponse;
 import com.g2.personalaccount.services.AccountService;
+import com.g2.personalaccount.services.TransactionService;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,9 +32,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AccountController {
 
   private AccountService accountService;
+  private TransactionService transactionService;
 
-  public AccountController(AccountService accountService) {
+  public AccountController(AccountService accountService, TransactionService transactionService) {
     this.accountService = accountService;
+    this.transactionService = transactionService;
   }
 
   @PostMapping
@@ -55,5 +62,12 @@ public class AccountController {
   public ResponseEntity<AccountCloseResponse> close(
       @RequestBody @Valid AccountCloseRequest request) {
     return new ResponseEntity<>(accountService.close(request), HttpStatus.OK);
+  }
+
+  @GetMapping("/last-transactions/{accountNumber}")
+  public ResponseEntity<AccountLastTransactionsResponse> lastTransactions(
+      @PathVariable("accountNumber") @NotNull Long accountNumber) {
+    return new ResponseEntity<>(
+        transactionService.retrieveLastTransactions(accountNumber), HttpStatus.OK);
   }
 }

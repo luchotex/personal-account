@@ -10,6 +10,6 @@ import lombok.Data;
 @Data
 public class AuthenticationResponse {
 
-  private String transactionId;
+  private Long transactionId;
   private LocalDateTime expirationDateTime;
 }

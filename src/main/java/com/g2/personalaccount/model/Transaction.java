@@ -7,8 +7,10 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -18,6 +20,7 @@ import org.hibernate.annotations.GenericGenerator;
  */
 @Entity
 @Data
+@Table(indexes = {@Index(name = "idx_account_ordered", columnList = "account_id,create_dateTime")})
 public class Transaction extends EditionDates {
 
   @Id

@@ -8,14 +8,15 @@ import static com.g2.personalaccount.model.enumerated.TypeEnum.TypeConstants.CRE
  */
 public enum TypeEnum {
   DEPOSIT("deposit"),
-  WITH_DRAWL("withdrawal"),
+  WITHDRAWAL("withdrawal"),
   DEBIT("debit"),
   CHECKS("checks"),
   CREATION(CREATION_VALUE),
   UPDATE_PERSONAL_DATA("updatePersonalData"),
   CONFIRMATION_CREATION("confirmCreation"),
   AUTHENTICATE("authenticate"),
-  CLOSE("close");
+  CLOSE("close"),
+  LAST_TRANSACTIONS("lastTransactions");
   private String name;
 
   TypeEnum(String name) {

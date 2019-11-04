@@ -81,12 +81,7 @@ public class EditionValidator {
   public Account validateUpdate(
       AccountUpdateRequest request, Optional<Account> foundAccountOptional) {
     Account foundAccount =
-        validateExistConfirmation(foundAccountOptional, request.getAccountNumber());
-
-    if (foundAccount.getStatus().equals(StatusEnum.INACTIVE)) {
-      throw new InvalidArgumentsException(
-          String.format(THE_ACCOUNT_IS_CLOSED, request.getAccountNumber()));
-    }
+        validateAccount(foundAccountOptional, request.getAccountNumber(), THE_ACCOUNT_IS_CLOSED);
 
     Optional<Account> foundEmailAccountOptional =
         accountRepository.findByAccountHolder_EmailAndStatusIn(
@@ -98,6 +93,17 @@ public class EditionValidator {
           String.format(EMAIL_ALREADY_EXISTS_IN_ANOTHER_ACCOUNT, request.getEmail()));
     }
 
+    return foundAccount;
+  }
+
+  public Account validateAccount(
+      Optional<Account> foundAccountOptional, Long accountNumber, String errorMessage) {
+    Account foundAccount = validateExistConfirmation(foundAccountOptional, accountNumber);
+
+    if (foundAccount.getStatus().equals(StatusEnum.INACTIVE)) {
+      throw new InvalidArgumentsException(String.format(errorMessage, accountNumber));
+    }
+
     validateLockingAccount(foundAccount);
 
     if (Objects.isNull(foundAccount.getAccountAccess().getAuthenticationExpiration())
@@ -107,7 +113,6 @@ public class EditionValidator {
             .isBefore(LocalDateTime.now())) {
       throw new InvalidArgumentsException(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION);
     }
-
     return foundAccount;
   }
 
@@ -188,22 +193,7 @@ public class EditionValidator {
   public Account closeAccountValidations(
       AccountCloseRequest request, Optional<Account> foundAccountOptional) {
     Account foundAccount =
-        validateExistConfirmation(foundAccountOptional, request.getAccountNumber());
-
-    if (foundAccount.getStatus().equals(StatusEnum.INACTIVE)) {
-      throw new InvalidArgumentsException(
-          String.format(ALREADY_CLOSED_ACCOUNT, request.getAccountNumber()));
-    }
-
-    validateLockingAccount(foundAccount);
-
-    if (Objects.isNull(foundAccount.getAccountAccess().getAuthenticationExpiration())
-        || foundAccount
-            .getAccountAccess()
-            .getAuthenticationExpiration()
-            .isBefore(LocalDateTime.now())) {
-      throw new InvalidArgumentsException(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION);
-    }
+        validateAccount(foundAccountOptional, request.getAccountNumber(), ALREADY_CLOSED_ACCOUNT);
     return foundAccount;
   }
 
