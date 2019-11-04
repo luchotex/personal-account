@@ -190,13 +190,6 @@ public class EditionValidator {
     return numberEntries;
   }
 
-  public Account closeAccountValidations(
-      AccountCloseRequest request, Optional<Account> foundAccountOptional) {
-    Account foundAccount =
-        validateAccount(foundAccountOptional, request.getAccountNumber(), ALREADY_CLOSED_ACCOUNT);
-    return foundAccount;
-  }
-
   private void validateLockingAccount(Account foundAccount) {
     LocalDateTime now = LocalDateTime.now();
 

@@ -153,7 +153,9 @@ public class AccountServiceImpl implements AccountService {
 
     Optional<Account> foundAccountOptional = accountRepository.findById(request.getAccountNumber());
 
-    Account foundAccount = editionValidator.closeAccountValidations(request, foundAccountOptional);
+    Account foundAccount =
+        editionValidator.validateAccount(
+            foundAccountOptional, request.getAccountNumber(), ALREADY_CLOSED_ACCOUNT);
 
     foundAccount.setStatus(StatusEnum.INACTIVE);
     accountRepository.save(foundAccount);

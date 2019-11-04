@@ -165,8 +165,7 @@ public class TransactionAspect {
     }
   }
 
-  private boolean validateFieldExistence(Object object, String fieldName)
-      throws IllegalAccessException {
+  private boolean validateFieldExistence(Object object, String fieldName) {
     boolean exist = false;
     if (Objects.isNull(object)) {
       return false;
