@@ -17,6 +17,9 @@ import java.time.LocalDateTime;
  */
 public class AccountTestUtils {
 
+  private AccountTestUtils() {
+  }
+
   public static AccountRequest createAccountRequest() {
     AccountRequest request = new AccountRequest();
     request.setHolderFirstName("Test first Name");
@@ -66,7 +69,6 @@ public class AccountTestUtils {
 
     return account;
   }
-
 
   public static Account createAccount(AccountRequest accountRequest, String confirmationId) {
     Account account = new Account();

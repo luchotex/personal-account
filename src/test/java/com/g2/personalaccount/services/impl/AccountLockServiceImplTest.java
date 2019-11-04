@@ -1,100 +1,67 @@
 package com.g2.personalaccount.services.impl;
 
+import static com.g2.personalaccount.services.impl.AccountLockServiceImpl.ACCOUNT_TRANSFERING_LOCKED;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_IS_LOCKED;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_NUMBER_DOESNT_EXISTS;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.THE_ACCOUNT_IS_CLOSED;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.g2.personalaccount.config.ServiceConfig;
-import com.g2.personalaccount.dto.mappers.TransactionMapper;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
-import com.g2.personalaccount.dto.responses.AccountLastTransactionsResponse;
-import com.g2.personalaccount.dto.responses.TransactionResponse;
 import com.g2.personalaccount.exceptions.InvalidArgumentsException;
 import com.g2.personalaccount.exceptions.ResourceNotFoundException;
 import com.g2.personalaccount.model.Account;
-import com.g2.personalaccount.model.Transaction;
+import com.g2.personalaccount.model.AccountLock;
 import com.g2.personalaccount.model.enumerated.StatusEnum;
-import com.g2.personalaccount.model.enumerated.TransactionStatusEnum;
-import com.g2.personalaccount.model.enumerated.TypeEnum;
+import com.g2.personalaccount.repositories.AccountLockRepository;
 import com.g2.personalaccount.repositories.AccountRepository;
-import com.g2.personalaccount.repositories.TransactionRepository;
-import com.g2.personalaccount.services.TransactionService;
+import com.g2.personalaccount.services.AccountLockService;
+import com.g2.personalaccount.utils.AccountLockTestUtils;
 import com.g2.personalaccount.utils.AccountTestUtils;
 import com.g2.personalaccount.validators.EditionValidator;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mapstruct.factory.Mappers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class TransactionServiceImplTest {
+public class AccountLockServiceImplTest {
 
   @Mock private AccountRepository accountRepository;
-  @Mock private TransactionRepository transactionRepository;
-  private TransactionMapper transactionMapper = Mappers.getMapper(TransactionMapper.class);
+  @Mock private AccountLockRepository accountLockRepository;
   private EditionValidator editionValidator;
+  private ServiceConfig serviceConfig;
 
-  private TransactionService service;
+  private AccountLockService service;
 
   @Before
   public void setUp() throws Exception {
+    serviceConfig = new ServiceConfig();
+    serviceConfig.setLockingRegistriesSeconds("30");
 
-    editionValidator = new EditionValidator(accountRepository, new ServiceConfig());
+    editionValidator = new EditionValidator(accountRepository, serviceConfig);
+
     service =
-        new TransactionServiceImpl(
-            accountRepository, transactionRepository, transactionMapper, editionValidator);
+        new AccountLockServiceImpl(
+            accountRepository, accountLockRepository, editionValidator, serviceConfig);
   }
 
   @Test
-  public void retrieveLastTransactions_successfulEmptyResults() {
+  public void lockAccount_inexistentLocking() {
 
     // given
     Long accountNumber = 234235436L;
-
-    AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
-    Account foundAccount = AccountTestUtils.createUpdateAccount(request);
-
-    foundAccount
-        .getAccountAccess()
-        .setAuthenticationExpiration(LocalDateTime.now().plusSeconds(100));
-    // when
-
-    when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
-    when(transactionRepository.findByAccount_IdAndStatusAndTypeIn(
-            anyLong(), any(), anyList(), any()))
-        .thenReturn(new ArrayList<>());
-    AccountLastTransactionsResponse response = service.retrieveLastTransactions(accountNumber);
-    assertNotNull(response);
-    assertTrue(response.getTransactionResponses().isEmpty());
-    // then
-    verify(accountRepository, times(1)).findById(anyLong());
-    verify(transactionRepository, times(1))
-        .findByAccount_IdAndStatusAndTypeIn(anyLong(), any(), anyList(), any());
-  }
-
-  @Test
-  public void retrieveLastTransactions_successfulNotEmptyResults() {
-
-    // given
-    Long accountNumber = 234235436L;
+    String threadNumber = "threadNumber";
 
     AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
     Account foundAccount = AccountTestUtils.createUpdateAccount(request);
@@ -103,56 +70,111 @@ public class TransactionServiceImplTest {
         .getAccountAccess()
         .setAuthenticationExpiration(LocalDateTime.now().plusSeconds(100));
 
-    Transaction transaction = new Transaction();
-    transaction.setId(3241124324531L);
-    transaction.setCreateDateTime(LocalDateTime.now().minusSeconds(100));
-    transaction.setType(TypeEnum.CHECKS);
-    transaction.setStatus(TransactionStatusEnum.CORRECT);
-    transaction.setAmount(new BigDecimal(10));
-    transaction.setDescription("Gasoline");
-
-    Transaction secondTransaction = new Transaction();
-    transaction.setId(324143524324531L);
-    secondTransaction.setCreateDateTime(LocalDateTime.now().minusSeconds(200));
-    secondTransaction.setType(TypeEnum.DEBIT);
-    secondTransaction.setStatus(TransactionStatusEnum.CORRECT);
-    secondTransaction.setAmount(new BigDecimal(100));
-    secondTransaction.setDescription("Shop Purchase");
-
     // when
-
     when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
-    when(transactionRepository.findByAccount_IdAndStatusAndTypeIn(
-            anyLong(), any(), anyList(), any()))
-        .thenReturn(Arrays.asList(transaction, secondTransaction));
-    AccountLastTransactionsResponse response = service.retrieveLastTransactions(accountNumber);
-    assertNotNull(response);
-    assertTrue(!response.getTransactionResponses().isEmpty());
+    when(accountLockRepository.findByAccount_Id(anyLong())).thenReturn(Optional.empty());
 
-    TransactionResponse firstResponse = response.getTransactionResponses().get(0);
-
-    assertEquals(transaction.getAmount(), firstResponse.getAmount());
-    assertEquals(transaction.getDescription(), firstResponse.getDescription());
-    assertEquals(transaction.getCreateDateTime(), firstResponse.getLocalDateTime());
-    assertEquals(transaction.getId(), firstResponse.getTransactionId());
-    assertEquals(transaction.getType(), firstResponse.getType());
-
+    service.lockAccount(accountNumber, threadNumber);
     // then
     verify(accountRepository, times(1)).findById(anyLong());
-    verify(transactionRepository, times(1))
-        .findByAccount_IdAndStatusAndTypeIn(anyLong(), any(), anyList(), any());
+    verify(accountLockRepository, times(1)).findByAccount_Id(anyLong());
+
+    ArgumentCaptor<AccountLock> accountArgumentCaptor = ArgumentCaptor.forClass(AccountLock.class);
+
+    verify(accountLockRepository, times(1)).save(accountArgumentCaptor.capture());
+
+    AccountLock savingValue = accountArgumentCaptor.getValue();
+
+    assertNotNull(savingValue.getThreadName());
+    assertEquals(threadNumber, savingValue.getThreadName());
+    assertNotNull(savingValue.getAccount());
+    assertNotNull(savingValue.getExpirationDate());
+    assertTrue(savingValue.getExpirationDate().isAfter(LocalDateTime.now()));
   }
 
   @Test
-  public void retrieveLastTransactions_accountNotfound() {
+  public void lockAccount_existentExpiredLocking() {
 
     // given
     Long accountNumber = 234235436L;
+    String threadNumber = "threadName";
+
+    AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
+    Account foundAccount = AccountTestUtils.createUpdateAccount(request);
+
+    foundAccount
+        .getAccountAccess()
+        .setAuthenticationExpiration(LocalDateTime.now().plusSeconds(100));
+
+    AccountLock accountLockFound =
+        AccountLockTestUtils.createAccountLock(foundAccount, LocalDateTime.now().minusSeconds(100));
+
+    // when
+    when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+    when(accountLockRepository.findByAccount_Id(anyLong()))
+        .thenReturn(Optional.of(accountLockFound));
+
+    service.lockAccount(accountNumber, threadNumber);
+    // then
+    verify(accountRepository, times(1)).findById(anyLong());
+    verify(accountLockRepository, times(1)).findByAccount_Id(anyLong());
+
+    ArgumentCaptor<AccountLock> accountArgumentCaptor = ArgumentCaptor.forClass(AccountLock.class);
+
+    verify(accountLockRepository, times(1)).save(accountArgumentCaptor.capture());
+
+    AccountLock savingValue = accountArgumentCaptor.getValue();
+
+    assertNotNull(savingValue.getThreadName());
+    assertEquals(threadNumber, savingValue.getThreadName());
+    assertNotNull(savingValue.getAccount());
+    assertNotNull(savingValue.getExpirationDate());
+    assertTrue(savingValue.getExpirationDate().isAfter(LocalDateTime.now()));
+  }
+
+  @Test
+  public void lockAccount_existentLockingAccount() {
+
+    // given
+    Long accountNumber = 234235436L;
+    String threadNumber = "threadName";
+
+    AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
+    Account foundAccount = AccountTestUtils.createUpdateAccount(request);
+
+    foundAccount
+        .getAccountAccess()
+        .setAuthenticationExpiration(LocalDateTime.now().plusSeconds(100));
+
+    AccountLock accountLockFound =
+        AccountLockTestUtils.createAccountLock(foundAccount, LocalDateTime.now().plusSeconds(100));
+
+    // when
+    when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+    when(accountLockRepository.findByAccount_Id(anyLong()))
+        .thenReturn(Optional.of(accountLockFound));
+
+    try {
+      service.lockAccount(accountNumber, threadNumber);
+    } catch (InvalidArgumentsException ex) {
+      // then
+      verify(accountRepository, times(1)).findById(anyLong());
+      verify(accountLockRepository, times(1)).findByAccount_Id(anyLong());
+      assertEquals(String.format(ACCOUNT_TRANSFERING_LOCKED, accountNumber), ex.getMessage());
+    }
+  }
+
+  @Test
+  public void lockAccount_accountNotfound() {
+
+    // given
+    Long accountNumber = 234235436L;
+    String threadNumber = "threadNumber";
 
     try {
       // when
       when(accountRepository.findById(anyLong())).thenReturn(Optional.empty());
-      AccountLastTransactionsResponse response = service.retrieveLastTransactions(accountNumber);
+      service.lockAccount(accountNumber, threadNumber);
     } catch (ResourceNotFoundException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
@@ -161,10 +183,11 @@ public class TransactionServiceImplTest {
   }
 
   @Test
-  public void retrieveLastTransactions_accountIsOnConfirm() {
+  public void lockAccount_accountIsOnConfirm() {
 
     // given
     Long accountNumber = 234235436L;
+    String threadNumber = "threadNumber";
 
     AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
     Account foundAccount = AccountTestUtils.createUpdateAccount(request);
@@ -174,7 +197,7 @@ public class TransactionServiceImplTest {
       // when
       when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
 
-      AccountLastTransactionsResponse response = service.retrieveLastTransactions(accountNumber);
+      service.lockAccount(accountNumber, threadNumber);
     } catch (InvalidArgumentsException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
@@ -184,10 +207,11 @@ public class TransactionServiceImplTest {
   }
 
   @Test
-  public void retrieveLastTransactions_accountIsClosed() {
+  public void lockAccount_accountIsClosed() {
 
     // given
     Long accountNumber = 234235436L;
+    String threadNumber = "threadNumber";
 
     AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
     Account foundAccount = AccountTestUtils.createUpdateAccount(request);
@@ -197,7 +221,7 @@ public class TransactionServiceImplTest {
       // when
       when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
 
-      AccountLastTransactionsResponse response = service.retrieveLastTransactions(accountNumber);
+      service.lockAccount(accountNumber, threadNumber);
     } catch (InvalidArgumentsException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
@@ -206,10 +230,11 @@ public class TransactionServiceImplTest {
   }
 
   @Test
-  public void retrieveLastTransactions_notYetAuthenticated() {
+  public void lockAccount_notYetAuthenticated() {
 
     // given
     Long accountNumber = 234235436L;
+    String threadNumber = "threadNumber";
 
     AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
     Account foundAccount = AccountTestUtils.createUpdateAccount(request);
@@ -217,7 +242,7 @@ public class TransactionServiceImplTest {
       // when
 
       when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
-      AccountLastTransactionsResponse response = service.retrieveLastTransactions(accountNumber);
+      service.lockAccount(accountNumber, threadNumber);
     } catch (InvalidArgumentsException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
@@ -226,10 +251,11 @@ public class TransactionServiceImplTest {
   }
 
   @Test
-  public void retrieveLastTransactions_accountLocked() {
+  public void lockAccount_accountLocked() {
 
     // given
     Long accountNumber = 234235436L;
+    String threadNumber = "threadNumber";
 
     AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
     Account foundAccount = AccountTestUtils.createUpdateAccount(request);
@@ -241,7 +267,7 @@ public class TransactionServiceImplTest {
 
       when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
 
-      AccountLastTransactionsResponse response = service.retrieveLastTransactions(accountNumber);
+      service.lockAccount(accountNumber, threadNumber);
     } catch (InvalidArgumentsException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
@@ -253,10 +279,11 @@ public class TransactionServiceImplTest {
   }
 
   @Test
-  public void retrieveLastTransactions_authenticationExpired() {
+  public void lockAccount_authenticationExpired() {
 
     // given
     Long accountNumber = 234235436L;
+    String threadNumber = "threadNumber";
 
     AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
     Account foundAccount = AccountTestUtils.createUpdateAccount(request);
@@ -267,8 +294,9 @@ public class TransactionServiceImplTest {
 
     try {
       // when
+
       when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
-      AccountLastTransactionsResponse response = service.retrieveLastTransactions(accountNumber);
+      service.lockAccount(accountNumber, threadNumber);
     } catch (InvalidArgumentsException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());

@@ -1,6 +1,5 @@
 package com.g2.personalaccount.model;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -9,38 +8,35 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import lombok.Data;
 
 /**
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
- * @created 2019-10-30 18:03
+ * @created 2019-11-04 08:06
  */
-@Data
 @Entity
-@Table(indexes = {@Index(name = "idx_account_balance", columnList = "account_id")})
-public class Balance extends EditionDates {
-
-  // TODO to be defined in future issue
-
+@Data
+@Table(indexes = {@Index(name = "idx_account_lock", columnList = "account_id")})
+public class AccountLock {
   @Id
-  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "balance_generator")
+  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_lock_generator")
   @SequenceGenerator(
-      name = "balance_generator",
-      sequenceName = "balance_id_seq",
+      name = "account_lock_generator",
+      sequenceName = "account_lock_id_seq",
       allocationSize = 1)
-  @Column(name = "balance_id")
+  @Column(name = "account_lock_id")
   private Long id;
 
-  @Column(name = "amount")
-  private BigDecimal amount;
+  @Column(name = "thread_name")
+  private String threadName;
 
-  @Column(name = "locking_date_time")
-  private LocalDateTime lockingDateTime;
+  @Column(name = "expiration_date")
+  private LocalDateTime expirationDate;
 
-  @ManyToOne
+  @OneToOne
   @JoinColumn(name = "account_id")
   private Account account;
 }
