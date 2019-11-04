@@ -60,6 +60,8 @@ public class TransactionServiceImpl implements TransactionService {
             TransactionStatusEnum.CORRECT,
             Arrays.asList(TypeEnum.CHECKS, TypeEnum.DEBIT, TypeEnum.DEPOSIT, TypeEnum.WITHDRAWAL),
             pageable);
+    foundAccountOptional.get().getAccountAccess().setAuthenticationExpiration(null);
+    accountRepository.save(foundAccountOptional.get());
 
     AccountLastTransactionsResponse response = new AccountLastTransactionsResponse();
     response.setTransactionResponses(transactionMapper.toList(lastTransactions));

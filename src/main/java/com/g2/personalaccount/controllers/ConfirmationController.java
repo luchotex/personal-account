@@ -1,6 +1,7 @@
 package com.g2.personalaccount.controllers;
 
 import com.g2.personalaccount.services.AccountConfirmationService;
+import io.swagger.annotations.Api;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
  * @created 2019-11-01 14:19
  */
+@Api(value = "/confirmation")
 @Controller
 public class ConfirmationController {
 

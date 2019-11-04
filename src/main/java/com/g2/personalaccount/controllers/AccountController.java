@@ -10,9 +10,12 @@ import com.g2.personalaccount.dto.responses.AccountCloseResponse;
 import com.g2.personalaccount.dto.responses.AccountLastTransactionsResponse;
 import com.g2.personalaccount.dto.responses.AccountResponse;
 import com.g2.personalaccount.dto.responses.AuthenticationResponse;
+import com.g2.personalaccount.dto.responses.CurrentBalanceResponse;
 import com.g2.personalaccount.dto.responses.MoneyMovementResponse;
 import com.g2.personalaccount.services.AccountService;
+import com.g2.personalaccount.services.BalanceService;
 import com.g2.personalaccount.services.TransactionService;
+import io.swagger.annotations.Api;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
@@ -30,16 +33,22 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
  * @created 2019-10-30 17:41
  */
+@Api(value = "/account")
 @RestController
 @RequestMapping(value = "/accounts")
 public class AccountController {
 
   private AccountService accountService;
   private TransactionService transactionService;
+  private BalanceService balanceService;
 
-  public AccountController(AccountService accountService, TransactionService transactionService) {
+  public AccountController(
+      AccountService accountService,
+      TransactionService transactionService,
+      BalanceService balanceService) {
     this.accountService = accountService;
     this.transactionService = transactionService;
+    this.balanceService = balanceService;
   }
 
   @PostMapping
@@ -96,5 +105,11 @@ public class AccountController {
   public ResponseEntity<MoneyMovementResponse> debit(
       @RequestBody @Valid ExternalMoneyMovementRequest request) {
     return new ResponseEntity<>(accountService.debit(request), HttpStatus.OK);
+  }
+
+  @GetMapping("/current-balance/{accountNumber}")
+  public ResponseEntity<CurrentBalanceResponse> currentBalance(
+      @PathVariable("accountNumber") @NotNull Long accountNumber) {
+    return new ResponseEntity<>(balanceService.retrieveTotalBalance(accountNumber), HttpStatus.OK);
   }
 }

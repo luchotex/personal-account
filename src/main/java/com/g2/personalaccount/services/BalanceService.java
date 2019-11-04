@@ -1,5 +1,6 @@
 package com.g2.personalaccount.services;
 
+import com.g2.personalaccount.dto.responses.CurrentBalanceResponse;
 import com.g2.personalaccount.model.Account;
 import com.g2.personalaccount.model.Balance;
 import java.math.BigDecimal;
@@ -17,4 +18,6 @@ public interface BalanceService {
   void substractBalances(List<Balance> balances, BigDecimal amount);
 
   void releaseBalances(String threadName);
+
+  CurrentBalanceResponse retrieveTotalBalance(Long accountNumber);
 }

@@ -139,6 +139,7 @@ public class AccountServiceImpl implements AccountService {
     Account foundAccount = editionValidator.validateUpdate(request, foundAccountOptional);
 
     accountMapper.toEntity(request, foundAccount);
+    foundAccount.getAccountAccess().setAuthenticationExpiration(null);
 
     foundAccount = accountRepository.save(foundAccount);
 
@@ -202,6 +203,8 @@ public class AccountServiceImpl implements AccountService {
       accountLockService.lockAccount(request.getAccountNumber(), threadName);
 
       balanceService.addBalances(request.getAmount(), foundAccount);
+      foundAccount.getAccountAccess().setAuthenticationExpiration(null);
+      accountRepository.save(foundAccount);
     } finally {
       balanceService.releaseBalances(threadName);
       accountLockService.releaseAccount(request.getAccountNumber(), threadName);
@@ -222,12 +225,13 @@ public class AccountServiceImpl implements AccountService {
 
     String threadName = Thread.currentThread().getName();
 
-    performPayment(request, threadName);
+    performPayment(foundAccountOptional.get(), request, threadName);
 
     return new MoneyMovementResponse();
   }
 
-  private void performPayment(MoneyMovementRequest request, String threadName) {
+  private void performPayment(
+      Account foundAccount, MoneyMovementRequest request, String threadName) {
     try {
       accountLockService.lockAccount(request.getAccountNumber(), threadName);
 
@@ -236,6 +240,8 @@ public class AccountServiceImpl implements AccountService {
               request.getAccountNumber(), request.getAmount(), threadName);
 
       balanceService.substractBalances(balances, request.getAmount());
+      foundAccount.getAccountAccess().setAuthenticationExpiration(null);
+      accountRepository.save(foundAccount);
     } finally {
       balanceService.releaseBalances(threadName);
       accountLockService.releaseAccount(request.getAccountNumber(), threadName);
@@ -246,34 +252,21 @@ public class AccountServiceImpl implements AccountService {
   @TransactionLogging(TypeEnum.DEBIT)
   public MoneyMovementResponse debit(ExternalMoneyMovementRequest request) {
 
-    Optional<Account> foundAccountOptional = accountRepository.findById(request.getAccountNumber());
-
-    Account foundAccount =
-        editionValidator.validateAccount(
-            foundAccountOptional, request.getAccountNumber(), THE_ACCOUNT_IS_CLOSED);
-
-    AuthenticationRequest authenticationRequest = new AuthenticationRequest();
-    authenticationRequest.setAccountNumber(request.getAccountNumber());
-    authenticationRequest.setPin(request.getPin());
-
-    authenticateAccount(authenticationRequest);
-
-    String threadName = Thread.currentThread().getName();
-
-    performPayment(request, threadName);
-
-    return new MoneyMovementResponse();
+    return performExternalMoneyMovement(request);
   }
 
   @Override
   @TransactionLogging(TypeEnum.CHECKS)
   public MoneyMovementResponse checkCharge(ExternalMoneyMovementRequest request) {
 
+    return performExternalMoneyMovement(request);
+  }
+
+  private MoneyMovementResponse performExternalMoneyMovement(ExternalMoneyMovementRequest request) {
     Optional<Account> foundAccountOptional = accountRepository.findById(request.getAccountNumber());
 
-    Account foundAccount =
-        editionValidator.validateAccount(
-            foundAccountOptional, request.getAccountNumber(), THE_ACCOUNT_IS_CLOSED);
+    editionValidator.validateAccount(
+        foundAccountOptional, request.getAccountNumber(), THE_ACCOUNT_IS_CLOSED);
 
     AuthenticationRequest authenticationRequest = new AuthenticationRequest();
     authenticationRequest.setAccountNumber(request.getAccountNumber());
@@ -283,7 +276,7 @@ public class AccountServiceImpl implements AccountService {
 
     String threadName = Thread.currentThread().getName();
 
-    performPayment(request, threadName);
+    performPayment(foundAccountOptional.get(), request, threadName);
 
     return new MoneyMovementResponse();
   }
