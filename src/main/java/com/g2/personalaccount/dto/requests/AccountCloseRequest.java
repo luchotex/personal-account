@@ -1,5 +1,6 @@
 package com.g2.personalaccount.dto.requests;
 
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
@@ -8,5 +9,6 @@ import lombok.Data;
  */
 @Data
 public class AccountCloseRequest {
+  @NotNull(message = "The account number must have a value")
   private Long accountNumber;
 }

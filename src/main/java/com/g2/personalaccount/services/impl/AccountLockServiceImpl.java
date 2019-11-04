@@ -43,7 +43,7 @@ public class AccountLockServiceImpl implements AccountLockService {
 
   @Override
   @Transactional
-  public void lockAccount(Long accountNumber, String threadName) {
+  public Account lockAccount(Long accountNumber, String threadName) {
 
     Optional<Account> optionalAccount = accountRepository.findById(accountNumber);
 
@@ -71,6 +71,7 @@ public class AccountLockServiceImpl implements AccountLockService {
             String.format(ACCOUNT_TRANSFERING_LOCKED, accountNumber));
       }
     }
+    return optionalAccount.get();
   }
 
   @Override

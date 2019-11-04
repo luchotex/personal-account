@@ -1,5 +1,7 @@
 package com.g2.personalaccount.dto.requests;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
@@ -8,5 +10,7 @@ import lombok.Data;
  */
 @Data
 public class ExternalMoneyMovementRequest extends MoneyMovementRequest {
+  @NotNull(message = "The pin must have a value")
+  @NotEmpty(message = "The pin musn't be empty value")
   private String pin;
 }

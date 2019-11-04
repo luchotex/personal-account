@@ -1,13 +1,32 @@
 # personal-account
 Application to handle personal account operations
 
-To perform operations like 
-
-You need to provide the pin in MD5 coding, so each operation you reach is needed authentication.
-
 # Personal Account check
 
 This micro service contains endpoints for administrate a personal Account operations 
+
+## Definitions
+
+To perform operations like:
+- Update Personal Data.
+- Close Account.
+- Get last transactions.
+- Get current balance.
+- Perform a withdrawal.
+- Perform a deposit.
+- Perform a debit.
+- Perform a charge check.
+
+
+You need to provide the pin in MD5 coding, so each operation you reach is needed authentication.
+
+
+## Steps
+
+- Creation of the account.
+- Pin received via email.
+- Confirmation via email.
+- Authenticate to perform an operation.
 
 ### Prerequisites
 
