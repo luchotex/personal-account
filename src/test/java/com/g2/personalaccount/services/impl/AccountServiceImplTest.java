@@ -585,7 +585,6 @@ public class AccountServiceImplTest {
       // when
       when(accountRepository.findById(anyLong())).thenReturn(Optional.empty());
       AccountResponse response = accountService.updatePersonalData(request);
-      // when
     } catch (ResourceNotFoundException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
@@ -609,7 +608,6 @@ public class AccountServiceImplTest {
       when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
 
       AccountResponse response = accountService.updatePersonalData(request);
-      // when
     } catch (InvalidArgumentsException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
@@ -634,7 +632,6 @@ public class AccountServiceImplTest {
       when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
 
       AccountResponse response = accountService.updatePersonalData(request);
-      // when
     } catch (InvalidArgumentsException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
@@ -660,7 +657,6 @@ public class AccountServiceImplTest {
       when(accountRepository.findByAccountHolder_EmailAndStatusIn(anyString(), any()))
           .thenReturn(Optional.of(emailFoundAccount));
       AccountResponse response = accountService.updatePersonalData(request);
-      // when
     } catch (InvalidArgumentsException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
@@ -687,7 +683,6 @@ public class AccountServiceImplTest {
       when(accountRepository.findByAccountHolder_EmailAndStatusIn(anyString(), any()))
           .thenReturn(Optional.of(emailFoundAccount));
       AccountResponse response = accountService.updatePersonalData(request);
-      // when
     } catch (InvalidArgumentsException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
@@ -713,7 +708,6 @@ public class AccountServiceImplTest {
       when(accountRepository.findByAccountHolder_EmailAndStatusIn(anyString(), any()))
           .thenReturn(Optional.of(emailFoundAccount));
       AccountResponse response = accountService.updatePersonalData(request);
-      // when
     } catch (InvalidArgumentsException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
@@ -744,7 +738,6 @@ public class AccountServiceImplTest {
       when(accountRepository.findByAccountHolder_EmailAndStatusIn(anyString(), any()))
           .thenReturn(Optional.of(emailFoundAccount));
       AccountResponse response = accountService.updatePersonalData(request);
-      // when
     } catch (InvalidArgumentsException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
@@ -774,7 +767,6 @@ public class AccountServiceImplTest {
     when(accountRepository.save(any())).thenReturn(foundAccount);
     AuthenticationResponse response = accountService.authenticateAccount(request);
 
-    // when
     assertNotNull(response);
     ArgumentCaptor<Account> accountArgumentCaptor = ArgumentCaptor.forClass(Account.class);
 
