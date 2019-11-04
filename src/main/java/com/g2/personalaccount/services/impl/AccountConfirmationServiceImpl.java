@@ -3,8 +3,10 @@ package com.g2.personalaccount.services.impl;
 import com.g2.personalaccount.model.AccountConfirmation;
 import com.g2.personalaccount.model.enumerated.ConfirmationStatusEnum;
 import com.g2.personalaccount.model.enumerated.StatusEnum;
+import com.g2.personalaccount.model.enumerated.TypeEnum;
 import com.g2.personalaccount.repositories.AccountConfirmationRepository;
 import com.g2.personalaccount.services.AccountConfirmationService;
+import com.g2.personalaccount.transaction.TransactionLogging;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ public class AccountConfirmationServiceImpl implements AccountConfirmationServic
   }
 
   @Override
+  @TransactionLogging(TypeEnum.CONFIRMATION_CREATION)
   public String confirmCreation(String confirmationId) {
 
     Optional<AccountConfirmation> accountConfirmation =

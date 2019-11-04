@@ -38,7 +38,7 @@ public class AccountRequest {
   private Long ssn;
 
   @NotNull(message = "The Voter card Id must have a value")
-  @Positive(message = "The voter card id cannot be a negative value")
+  @Positive(message = "The voter card Id cannot be a negative value")
   // TODO validate this format
   private Long voterCardId;
 }

@@ -1,6 +1,7 @@
 package com.g2.personalaccount.model;
 
 import com.g2.personalaccount.model.enumerated.StatusEnum;
+import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
@@ -8,6 +9,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;
@@ -42,4 +44,7 @@ public class Account extends EditionDates {
 
   @Column(name = "status")
   private StatusEnum status;
+
+  @OneToMany(mappedBy = "account")
+  private List<Transaction> transactions;
 }

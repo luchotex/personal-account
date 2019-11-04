@@ -14,8 +14,8 @@ import lombok.Data;
 @Data
 public class AccountUpdateRequest {
 
-  @NotNull(message = "The account number id must have a value")
-  private Long id;
+  @NotNull(message = "The account number must have a value")
+  private Long accountNumber;
 
   @NotNull(message = "The First name must have a value")
   @NotEmpty(message = "The First name musn't be empty value")
@@ -35,7 +35,7 @@ public class AccountUpdateRequest {
   private String email;
 
   @NotNull(message = "The Voter card Id must have a value")
-  @Positive(message = "The voter card id cannot be a negative value")
+  @Positive(message = "The voter card Id cannot be a negative value")
   // TODO validate this format
   private Long voterCardId;
 }

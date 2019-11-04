@@ -7,26 +7,27 @@ import javax.persistence.Converter;
 
 /**
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
- * @created 2019-10-31 20:22
+ * @created 2019-13-03 13:41
  */
 @Converter(autoApply = true)
-public class TypeConverter implements AttributeConverter<TypeEnum, String> {
+public class TransactionStatusConverter
+    implements AttributeConverter<TransactionStatusEnum, String> {
 
   @Override
-  public String convertToDatabaseColumn(TypeEnum type) {
-    if (Objects.isNull(type)) {
+  public String convertToDatabaseColumn(TransactionStatusEnum status) {
+    if (Objects.isNull(status)) {
       return null;
     }
-    return type.getName();
+    return status.getName();
   }
 
   @Override
-  public TypeEnum convertToEntityAttribute(String code) {
+  public TransactionStatusEnum convertToEntityAttribute(String code) {
     if (Objects.isNull(code)) {
       return null;
     }
 
-    return Stream.of(TypeEnum.values())
+    return Stream.of(TransactionStatusEnum.values())
         .filter(c -> c.getName().equals(code))
         .findFirst()
         .orElseThrow(IllegalArgumentException::new);

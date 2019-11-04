@@ -39,18 +39,20 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
 
   @ExceptionHandler(ResourceNotFoundException.class)
   public final ResponseEntity<Object> handleResourceNotFoundExceptions(Exception ex) {
-    return generateErrorResponse(ex.getMessage(), PRECONDITION_FAILED);
+    return generateErrorResponse(
+        ex.getMessage(), PRECONDITION_FAILED, ((ResourceNotFoundException) ex).getTransactionId());
   }
 
   @ExceptionHandler(InvalidArgumentsException.class)
   public final ResponseEntity<Object> handleInvalidArgumentsExceptions(Exception ex) {
-    return generateErrorResponse(ex.getMessage(), UNPROCESSABLE_ENTITY);
+    return generateErrorResponse(
+        ex.getMessage(), UNPROCESSABLE_ENTITY, ((InvalidArgumentsException) ex).getTransactionId());
   }
 
   @ExceptionHandler(Exception.class)
   public final ResponseEntity<Object> handleGenericExceptions(Exception ex) {
     log.error(ex.getMessage(), ex);
-    return generateErrorResponse("HTTP 500 Internal Error", INTERNAL_SERVER_ERROR);
+    return generateErrorResponse("HTTP 500 Internal Error", INTERNAL_SERVER_ERROR, null);
   }
 
   @Override
@@ -63,7 +65,7 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
     if ((ex.getMostSpecificCause() instanceof DateTimeParseException)) {
       error = DATETIME_PARSER_ERROR;
     }
-    return generateErrorResponse(error, HttpStatus.BAD_REQUEST);
+    return generateErrorResponse(error, HttpStatus.BAD_REQUEST, null);
   }
 
   @Override
@@ -76,11 +78,13 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
     BindingResult bindingResult = ex.getBindingResult();
     String errorMessage = bindingResult.getAllErrors().get(0).getDefaultMessage();
 
-    return generateErrorResponse(errorMessage, status);
+    return generateErrorResponse(errorMessage, status, null);
   }
 
-  private ResponseEntity<Object> generateErrorResponse(String message, HttpStatus httpStatus) {
+  private ResponseEntity<Object> generateErrorResponse(
+      String message, HttpStatus httpStatus, Long transactionId) {
     ErrorResponse error = new ErrorResponse();
+    error.setTransactionId(transactionId);
     error.setMessage(message);
     error.setStatus(httpStatus.value());
     error.setError(httpStatus.getReasonPhrase());
