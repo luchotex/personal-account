@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.g2</groupId>
     <artifactId>personal-account</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0-RELEASE</version>
     <name>personal-account</name>
     <description>Demo project for Spring Boot</description>
 
