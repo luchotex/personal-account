@@ -641,11 +641,78 @@ public class AccountServiceImplTest {
   }
 
   @Test
+  public void update_notYetAuthenticated() {
+
+    // given
+    AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
+    Account foundAccount = AccountTestUtils.createUpdateAccount(request);
+
+    try {
+      // when
+
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+
+      AccountResponse response = accountService.updatePersonalData(request);
+    } catch (InvalidArgumentsException ex) {
+      // then
+      verify(accountRepository, times(1)).findById(anyLong());
+      assertEquals(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION, ex.getMessage());
+    }
+  }
+
+  @Test
+  public void update_accountLocked() {
+
+    // given
+    AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
+    Account foundAccount = AccountTestUtils.createUpdateAccount(request);
+    foundAccount.getAccountAccess().setAuthenticationLocking(LocalDateTime.now().plusSeconds(100));
+
+    try {
+      // when
+
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+      AccountResponse response = accountService.updatePersonalData(request);
+    } catch (InvalidArgumentsException ex) {
+      // then
+      verify(accountRepository, times(1)).findById(anyLong());
+      assertEquals(
+          String.format(
+              ACCOUNT_IS_LOCKED, foundAccount.getAccountAccess().getAuthenticationLocking()),
+          ex.getMessage());
+    }
+  }
+
+  @Test
+  public void update_authenticationExpired() {
+
+    // given
+    AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
+    Account foundAccount = AccountTestUtils.createUpdateAccount(request);
+
+    try {
+      // when
+
+      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
+
+      AccountResponse response = accountService.updatePersonalData(request);
+    } catch (InvalidArgumentsException ex) {
+      // then
+      verify(accountRepository, times(1)).findById(anyLong());
+      assertEquals(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION, ex.getMessage());
+    }
+  }
+
+  @Test
   public void update_emailExistsInAnotherAccount() {
 
     // given
     AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
     Account foundAccount = AccountTestUtils.createUpdateAccount(request);
+    foundAccount
+        .getAccountAccess()
+        .setAuthenticationExpiration(LocalDateTime.now().plusSeconds(100));
+
     Account emailFoundAccount = AccountTestUtils.createUpdateAccount(request);
     emailFoundAccount.setId(34324123L);
 
@@ -664,85 +731,6 @@ public class AccountServiceImplTest {
       assertEquals(
           String.format(EMAIL_ALREADY_EXISTS_IN_ANOTHER_ACCOUNT, request.getEmail()),
           ex.getMessage());
-    }
-  }
-
-  @Test
-  public void update_notYetAuthenticated() {
-
-    // given
-    AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
-    Account foundAccount = AccountTestUtils.createUpdateAccount(request);
-    Account emailFoundAccount = AccountTestUtils.createUpdateAccount(request);
-
-    try {
-      // when
-
-      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
-
-      when(accountRepository.findByAccountHolder_EmailAndStatusIn(anyString(), any()))
-          .thenReturn(Optional.of(emailFoundAccount));
-      AccountResponse response = accountService.updatePersonalData(request);
-    } catch (InvalidArgumentsException ex) {
-      // then
-      verify(accountRepository, times(1)).findById(anyLong());
-      verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
-      assertEquals(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION, ex.getMessage());
-    }
-  }
-
-  @Test
-  public void update_accountLocked() {
-
-    // given
-    AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
-    Account foundAccount = AccountTestUtils.createUpdateAccount(request);
-    Account emailFoundAccount = AccountTestUtils.createUpdateAccount(request);
-    foundAccount.getAccountAccess().setAuthenticationLocking(LocalDateTime.now().plusSeconds(100));
-
-    try {
-      // when
-
-      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
-
-      when(accountRepository.findByAccountHolder_EmailAndStatusIn(anyString(), any()))
-          .thenReturn(Optional.of(emailFoundAccount));
-      AccountResponse response = accountService.updatePersonalData(request);
-    } catch (InvalidArgumentsException ex) {
-      // then
-      verify(accountRepository, times(1)).findById(anyLong());
-      verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
-      assertEquals(
-          String.format(
-              ACCOUNT_IS_LOCKED, foundAccount.getAccountAccess().getAuthenticationLocking()),
-          ex.getMessage());
-    }
-  }
-
-  @Test
-  public void update_authenticationExpired() {
-
-    // given
-    AccountUpdateRequest request = AccountTestUtils.createAccountUpdateRequest();
-    Account foundAccount = AccountTestUtils.createUpdateAccount(request);
-    Account emailFoundAccount = AccountTestUtils.createUpdateAccount(request);
-    foundAccount
-        .getAccountAccess()
-        .setAuthenticationExpiration(LocalDateTime.now().minusSeconds(100));
-
-    try {
-      // when
-
-      when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
-
-      when(accountRepository.findByAccountHolder_EmailAndStatusIn(anyString(), any()))
-          .thenReturn(Optional.of(emailFoundAccount));
-      AccountResponse response = accountService.updatePersonalData(request);
-    } catch (InvalidArgumentsException ex) {
-      // then
-      verify(accountRepository, times(1)).findById(anyLong());
-      verify(accountRepository, times(1)).findByAccountHolder_EmailAndStatusIn(anyString(), any());
-      assertEquals(IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION, ex.getMessage());
     }
   }
 

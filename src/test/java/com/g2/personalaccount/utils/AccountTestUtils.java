@@ -61,7 +61,35 @@ public class AccountTestUtils {
     account.setAccountAccess(accountAccess);
 
     AccountConfirmation confirmation = new AccountConfirmation();
-    confirmation.setConfirmationId("234234asad  ");
+    confirmation.setConfirmationId("234234asad324234");
+    account.setAccountConfirmation(confirmation);
+
+    return account;
+  }
+
+
+  public static Account createAccount(AccountRequest accountRequest, String confirmationId) {
+    Account account = new Account();
+    account.setId(123456789123L);
+    account.setStatus(StatusEnum.ACTIVE);
+
+    AccountHolder accountHolder = new AccountHolder();
+    accountHolder.setFirstName(accountRequest.getHolderFirstName());
+    accountHolder.setLastName(accountRequest.getHolderLastName());
+    accountHolder.setEmail(accountRequest.getEmail());
+
+    AccountHolderId accountHolderId = new AccountHolderId();
+    accountHolderId.setSsn(accountRequest.getSsn());
+    accountHolderId.setVoterCardId(accountRequest.getVoterCardId());
+    accountHolder.setAccountHolderId(accountHolderId);
+
+    account.setAccountHolder(accountHolder);
+
+    AccountAccess accountAccess = new AccountAccess();
+    account.setAccountAccess(accountAccess);
+
+    AccountConfirmation confirmation = new AccountConfirmation();
+    confirmation.setConfirmationId(confirmationId);
     account.setAccountConfirmation(confirmation);
 
     return account;
