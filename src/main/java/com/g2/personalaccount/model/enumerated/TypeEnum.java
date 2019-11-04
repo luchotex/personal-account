@@ -14,7 +14,8 @@ public enum TypeEnum {
   CONFIRMATION_CREATION("confirmCreation"),
   AUTHENTICATE("authenticate"),
   CLOSE("close"),
-  LAST_TRANSACTIONS("lastTransactions");
+  LAST_TRANSACTIONS("lastTransactions"),
+  CURRENT_BALANCE("currentBalance");
   private String name;
 
   TypeEnum(String name) {
