@@ -11,9 +11,11 @@ import com.g2.personalaccount.dto.responses.AccountResponse;
 import com.g2.personalaccount.dto.responses.AuthenticationResponse;
 import com.g2.personalaccount.model.Account;
 import com.g2.personalaccount.model.enumerated.StatusEnum;
+import com.g2.personalaccount.model.enumerated.TypeEnum;
 import com.g2.personalaccount.proxy.EmailProxy;
 import com.g2.personalaccount.repositories.AccountRepository;
 import com.g2.personalaccount.services.AccountService;
+import com.g2.personalaccount.transaction.TransactionLogging;
 import com.g2.personalaccount.utils.PinGenerator;
 import com.g2.personalaccount.validators.EditionValidator;
 import java.time.LocalDateTime;
@@ -72,6 +74,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  @TransactionLogging(TypeEnum.CREATION)
   public AccountResponse create(AccountRequest request) {
 
     logger.info(
@@ -110,9 +113,10 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  @TransactionLogging(TypeEnum.UPDATE_PERSONAL_DATA)
   public AccountResponse updatePersonalData(AccountUpdateRequest request) {
 
-    Optional<Account> foundAccountOptional = accountRepository.findById(request.getId());
+    Optional<Account> foundAccountOptional = accountRepository.findById(request.getAccountNumber());
 
     Account foundAccount = editionValidator.validateUpdate(request, foundAccountOptional);
 
@@ -124,6 +128,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  @TransactionLogging(TypeEnum.AUTHENTICATE)
   public AuthenticationResponse authenticateAccount(AuthenticationRequest request) {
     Optional<Account> foundAccountOptional = accountRepository.findById(request.getAccountNumber());
 
@@ -143,6 +148,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  @TransactionLogging(TypeEnum.CLOSE)
   public AccountCloseResponse close(AccountCloseRequest request) {
 
     Optional<Account> foundAccountOptional = accountRepository.findById(request.getAccountNumber());

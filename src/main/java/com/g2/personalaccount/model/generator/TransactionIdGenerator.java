@@ -31,12 +31,13 @@ public class TransactionIdGenerator implements IdentifierGenerator, Configurable
 
     boolean isNotUnique = true;
 
-    String generated = "";
+    StringBuilder generated = new StringBuilder();
 
     while (isNotUnique) {
-      generated = RandomStringUtils.random(16, "0123456789");
+      String firstDigit = RandomStringUtils.random(1, "123456789");
+      generated = new StringBuilder(firstDigit).append(RandomStringUtils.random(15, "0123456789"));
 
-      Stream ids = retrieveIds(session, object, generated);
+      Stream ids = retrieveIds(session, object, generated.toString());
 
       Optional<String> optionalId = ids.map(String::valueOf).findFirst();
 
@@ -45,7 +46,7 @@ public class TransactionIdGenerator implements IdentifierGenerator, Configurable
       }
     }
 
-    return Long.valueOf(generated);
+    return Long.valueOf(generated.toString());
   }
 
   private Stream retrieveIds(SharedSessionContractImplementor session, Object object, String id) {

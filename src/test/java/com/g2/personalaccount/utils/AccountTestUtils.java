@@ -30,7 +30,7 @@ public class AccountTestUtils {
 
   public static AccountUpdateRequest createAccountUpdateRequest() {
     AccountUpdateRequest request = new AccountUpdateRequest();
-    request.setId(123456789123L);
+    request.setAccountNumber(123456789123L);
     request.setHolderFirstName("Test first Name update");
     request.setHolderLastName("Test last Name update");
     request.setEmail("emaiupdatedl@test.com");

@@ -1,5 +1,6 @@
 package com.g2.personalaccount.model.enumerated;
 
+import java.util.Objects;
 import java.util.stream.Stream;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
@@ -13,7 +14,7 @@ public class StatusConverter implements AttributeConverter<StatusEnum, String> {
 
   @Override
   public String convertToDatabaseColumn(StatusEnum status) {
-    if (status == null) {
+    if (Objects.isNull(status)) {
       return null;
     }
     return status.getName();
@@ -21,7 +22,7 @@ public class StatusConverter implements AttributeConverter<StatusEnum, String> {
 
   @Override
   public StatusEnum convertToEntityAttribute(String code) {
-    if (code == null) {
+    if (Objects.isNull(code)) {
       return null;
     }
 

@@ -1,5 +1,6 @@
 package com.g2.personalaccount.model.enumerated;
 
+import java.util.Objects;
 import java.util.stream.Stream;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
@@ -14,7 +15,7 @@ public class ConfirmationStatusConverter
 
   @Override
   public String convertToDatabaseColumn(ConfirmationStatusEnum status) {
-    if (status == null) {
+    if (Objects.isNull(status)) {
       return null;
     }
     return status.getName();
@@ -22,7 +23,7 @@ public class ConfirmationStatusConverter
 
   @Override
   public ConfirmationStatusEnum convertToEntityAttribute(String code) {
-    if (code == null) {
+    if (Objects.isNull(code)) {
       return null;
     }
 

@@ -80,10 +80,12 @@ public class EditionValidator {
 
   public Account validateUpdate(
       AccountUpdateRequest request, Optional<Account> foundAccountOptional) {
-    Account foundAccount = validateExistConfirmation(foundAccountOptional, request.getId());
+    Account foundAccount =
+        validateExistConfirmation(foundAccountOptional, request.getAccountNumber());
 
     if (foundAccount.getStatus().equals(StatusEnum.INACTIVE)) {
-      throw new InvalidArgumentsException(String.format(THE_ACCOUNT_IS_CLOSED, request.getId()));
+      throw new InvalidArgumentsException(
+          String.format(THE_ACCOUNT_IS_CLOSED, request.getAccountNumber()));
     }
 
     Optional<Account> foundEmailAccountOptional =
@@ -98,7 +100,7 @@ public class EditionValidator {
 
     validateLockingAccount(foundAccount);
 
-    if (foundAccount.getAccountAccess().getAuthenticationExpiration() == null
+    if (Objects.isNull(foundAccount.getAccountAccess().getAuthenticationExpiration())
         || foundAccount
             .getAccountAccess()
             .getAuthenticationExpiration()
@@ -195,7 +197,7 @@ public class EditionValidator {
 
     validateLockingAccount(foundAccount);
 
-    if (foundAccount.getAccountAccess().getAuthenticationExpiration() == null
+    if (Objects.isNull(foundAccount.getAccountAccess().getAuthenticationExpiration())
         || foundAccount
             .getAccountAccess()
             .getAuthenticationExpiration()
@@ -210,7 +212,7 @@ public class EditionValidator {
 
     LocalDateTime lockingDateTime = foundAccount.getAccountAccess().getAuthenticationLocking();
 
-    if (lockingDateTime != null && (lockingDateTime.isAfter(now))) {
+    if (Objects.nonNull(lockingDateTime) && (lockingDateTime.isAfter(now))) {
       throw new InvalidArgumentsException(
           String.format(
               ACCOUNT_IS_LOCKED, foundAccount.getAccountAccess().getAuthenticationLocking()));

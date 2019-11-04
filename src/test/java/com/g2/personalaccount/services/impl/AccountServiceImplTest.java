@@ -479,8 +479,8 @@ public class AccountServiceImplTest {
     assertNotNull(savingValue.getAccountAccess().getCreateDateTime());
     assertNotNull(savingValue.getAccountAccess().getUpdateDateTime());
 
-    assertNotNull(request.getId());
-    assertEquals(returnedAccount.getId(), request.getId());
+    assertNotNull(request.getAccountNumber());
+    assertEquals(returnedAccount.getId(), request.getAccountNumber());
 
     assertNotNull(response.getHolderFirstName());
     assertEquals(returnedAccount.getAccountHolder().getFirstName(), response.getHolderFirstName());
@@ -553,8 +553,8 @@ public class AccountServiceImplTest {
     assertNotNull(savingValue.getAccountAccess().getCreateDateTime());
     assertNotNull(savingValue.getAccountAccess().getUpdateDateTime());
 
-    assertNotNull(request.getId());
-    assertEquals(returnedAccount.getId(), request.getId());
+    assertNotNull(request.getAccountNumber());
+    assertEquals(returnedAccount.getId(), request.getAccountNumber());
 
     assertNotNull(response.getHolderFirstName());
     assertEquals(returnedAccount.getAccountHolder().getFirstName(), response.getHolderFirstName());
@@ -589,7 +589,8 @@ public class AccountServiceImplTest {
     } catch (ResourceNotFoundException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
-      assertEquals(String.format(ACCOUNT_NUMBER_DOESNT_EXISTS, request.getId()), ex.getMessage());
+      assertEquals(
+          String.format(ACCOUNT_NUMBER_DOESNT_EXISTS, request.getAccountNumber()), ex.getMessage());
     }
   }
 
@@ -613,7 +614,8 @@ public class AccountServiceImplTest {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
       assertEquals(
-          String.format(THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION, request.getId()), ex.getMessage());
+          String.format(THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION, request.getAccountNumber()),
+          ex.getMessage());
     }
   }
 
@@ -636,7 +638,8 @@ public class AccountServiceImplTest {
     } catch (InvalidArgumentsException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
-      assertEquals(String.format(THE_ACCOUNT_IS_CLOSED, request.getId()), ex.getMessage());
+      assertEquals(
+          String.format(THE_ACCOUNT_IS_CLOSED, request.getAccountNumber()), ex.getMessage());
     }
   }
 

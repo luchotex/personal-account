@@ -4,13 +4,14 @@ import lombok.Data;
 
 /**
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
- * @created 2019-10-31 10:30
+ * @created 2019-11-03 18:05
  */
 @Data
-public class ErrorResponse {
+public abstract class BaseException extends RuntimeException {
 
   private Long transactionId;
-  private int status;
-  private String error;
-  private String message;
+
+  public BaseException(String message) {
+    super(message);
+  }
 }

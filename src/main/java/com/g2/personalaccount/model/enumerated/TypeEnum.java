@@ -1,5 +1,7 @@
 package com.g2.personalaccount.model.enumerated;
 
+import static com.g2.personalaccount.model.enumerated.TypeEnum.TypeConstants.CREATION_VALUE;
+
 /**
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
  * @created 2019-10-30 19:58
@@ -8,7 +10,12 @@ public enum TypeEnum {
   DEPOSIT("deposit"),
   WITH_DRAWL("withdrawal"),
   DEBIT("debit"),
-  CHECKS("checks");
+  CHECKS("checks"),
+  CREATION(CREATION_VALUE),
+  UPDATE_PERSONAL_DATA("updatePersonalData"),
+  CONFIRMATION_CREATION("confirmCreation"),
+  AUTHENTICATE("authenticate"),
+  CLOSE("close");
   private String name;
 
   TypeEnum(String name) {
@@ -17,5 +24,9 @@ public enum TypeEnum {
 
   public String getName() {
     return name;
+  }
+
+  static class TypeConstants {
+    public static final String CREATION_VALUE = "creation";
   }
 }
