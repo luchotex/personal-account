@@ -153,7 +153,6 @@ public class TransactionServiceImplTest {
       // when
       when(accountRepository.findById(anyLong())).thenReturn(Optional.empty());
       AccountLastTransactionsResponse response = service.retrieveLastTransactions(accountNumber);
-      // when
     } catch (ResourceNotFoundException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
@@ -199,7 +198,6 @@ public class TransactionServiceImplTest {
       when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
 
       AccountLastTransactionsResponse response = service.retrieveLastTransactions(accountNumber);
-      // when
     } catch (InvalidArgumentsException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
@@ -220,7 +218,6 @@ public class TransactionServiceImplTest {
 
       when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
       AccountLastTransactionsResponse response = service.retrieveLastTransactions(accountNumber);
-      // when
     } catch (InvalidArgumentsException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
@@ -245,7 +242,6 @@ public class TransactionServiceImplTest {
       when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
 
       AccountLastTransactionsResponse response = service.retrieveLastTransactions(accountNumber);
-      // when
     } catch (InvalidArgumentsException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());
@@ -271,10 +267,8 @@ public class TransactionServiceImplTest {
 
     try {
       // when
-
       when(accountRepository.findById(anyLong())).thenReturn(Optional.of(foundAccount));
       AccountLastTransactionsResponse response = service.retrieveLastTransactions(accountNumber);
-      // when
     } catch (InvalidArgumentsException ex) {
       // then
       verify(accountRepository, times(1)).findById(anyLong());

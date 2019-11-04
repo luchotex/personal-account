@@ -18,4 +18,5 @@ public class ServiceConfig {
   private String pinExpirationSeconds;
   private String numberPinRetries;
   private String accountLockingSeconds;
+  private String lockingRegistriesSeconds;
 }

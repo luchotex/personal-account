@@ -47,4 +47,10 @@ public class Account extends EditionDates {
 
   @OneToMany(mappedBy = "account")
   private List<Transaction> transactions;
+
+  @OneToOne(mappedBy = "account")
+  private AccountLock accountLock;
+
+  @OneToMany(mappedBy = "account")
+  private List<Balance> balances;
 }

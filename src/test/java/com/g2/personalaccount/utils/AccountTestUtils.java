@@ -67,7 +67,6 @@ public class AccountTestUtils {
     return account;
   }
 
-
   public static Account createAccount(AccountRequest accountRequest, String confirmationId) {
     Account account = new Account();
     account.setId(123456789123L);
