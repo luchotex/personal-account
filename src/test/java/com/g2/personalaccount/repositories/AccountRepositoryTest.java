@@ -40,7 +40,7 @@ public class AccountRepositoryTest {
   public void savingAccount() {
     // given
     AccountRequest request = AccountTestUtils.createAccountRequest();
-    Account account = AccountTestUtils.createAccount(request);
+    Account account = AccountTestUtils.createAccount(request, "6gfd45423354235gfsdad");
     account.setId(null);
 
     // when
@@ -70,11 +70,12 @@ public class AccountRepositoryTest {
   }
 
   @Test
-  public void updatingAccount() {
+  public void updatingAccount() throws InterruptedException {
     // given
     AccountRequest request = AccountTestUtils.createAccountRequest();
     Account account = AccountTestUtils.createAccount(request);
     account.setId(null);
+    Thread.sleep(500);
 
     // when
     Account savedAccount = accountRepository.save(account);

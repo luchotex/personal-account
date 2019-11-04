@@ -8,5 +8,5 @@ import lombok.Data;
  */
 @Data
 public class AccountCloseResponse {
-  private String transactionId;
+  private Long transactionId;
 }

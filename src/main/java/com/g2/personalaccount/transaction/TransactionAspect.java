@@ -28,6 +28,8 @@ public class TransactionAspect {
   public static final String ACCOUNT_NUMBER_FIELD_NAME = "accountNumber";
   public static final int UUID_LENGTH = 36;
   public static final String SET_TRANSACTION_ID_METHOD_NAME = "setTransactionId";
+  public static final String TRANSACTION_ID_FIELD_NAME = "transactionId";
+
   private TransactionRepository transactionRepository;
   private AccountRepository accountRepository;
   private AccountConfirmationRepository accountConfirmationRepository;
@@ -90,6 +92,10 @@ public class TransactionAspect {
       accountNumber = getAccountNumber(proceed);
     }
 
+    if (Objects.isNull(accountNumber) && Objects.nonNull(request) && request instanceof Long) {
+      accountNumber = (Long) request;
+    }
+
     optionalAccount = retrieveOptionalAccount(accountNumber, optionalAccount);
 
     if (optionalAccount.isPresent()) {
@@ -136,6 +142,7 @@ public class TransactionAspect {
       field.setAccessible(true);
       if (field.getName().equals(ACCOUNT_NUMBER_FIELD_NAME)) {
         accountNumber = (Long) field.get(object);
+        break;
       }
       field.setAccessible(false);
     }
@@ -145,14 +152,37 @@ public class TransactionAspect {
   private void setTransactionId(Object proceed, Exception savedException, Transaction transaction)
       throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
     Method setTransactionIdMethod;
-    if (Objects.nonNull(proceed)) {
-      setTransactionIdMethod =
-          proceed.getClass().getMethod(SET_TRANSACTION_ID_METHOD_NAME, Long.class);
-      setTransactionIdMethod.invoke(proceed, transaction.getId());
-    } else {
-      setTransactionIdMethod =
-          savedException.getClass().getMethod(SET_TRANSACTION_ID_METHOD_NAME, Long.class);
-      setTransactionIdMethod.invoke(savedException, transaction.getId());
+    if (validateFieldExistence(proceed, TRANSACTION_ID_FIELD_NAME)) {
+      if (Objects.nonNull(proceed)) {
+        setTransactionIdMethod =
+            proceed.getClass().getMethod(SET_TRANSACTION_ID_METHOD_NAME, Long.class);
+        setTransactionIdMethod.invoke(proceed, transaction.getId());
+      } else {
+        setTransactionIdMethod =
+            savedException.getClass().getMethod(SET_TRANSACTION_ID_METHOD_NAME, Long.class);
+        setTransactionIdMethod.invoke(savedException, transaction.getId());
+      }
     }
+  }
+
+  private boolean validateFieldExistence(Object object, String fieldName)
+      throws IllegalAccessException {
+    boolean exist = false;
+    if (Objects.isNull(object)) {
+      return false;
+    }
+
+    Class<?> objClass = object.getClass();
+    Field[] fields = objClass.getDeclaredFields();
+
+    for (Field field : fields) {
+      field.setAccessible(true);
+      if (field.getName().equals(fieldName)) {
+        exist = true;
+        break;
+      }
+      field.setAccessible(false);
+    }
+    return exist;
   }
 }

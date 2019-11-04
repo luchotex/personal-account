@@ -36,8 +36,6 @@ public abstract class AccountMapperDecorator implements AccountMapper {
 
     account.setStatus(StatusEnum.ON_CONFIRM);
     account.setAccountAccess(new AccountAccess());
-    // TODO define pin length configuration
-
     String md5Pin = DigestUtils.md5Hex(String.valueOf(pin));
 
     account.getAccountAccess().setPin(md5Pin);
