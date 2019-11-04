@@ -17,8 +17,7 @@ import java.time.LocalDateTime;
  */
 public class AccountTestUtils {
 
-  private AccountTestUtils() {
-  }
+  private AccountTestUtils() {}
 
   public static AccountRequest createAccountRequest() {
     AccountRequest request = new AccountRequest();

@@ -1,15 +1,18 @@
 package com.g2.personalaccount.transaction;
 
+import com.g2.personalaccount.dto.requests.MoneyMovementRequest;
 import com.g2.personalaccount.model.Account;
 import com.g2.personalaccount.model.AccountConfirmation;
 import com.g2.personalaccount.model.Transaction;
 import com.g2.personalaccount.model.enumerated.TransactionStatusEnum;
+import com.g2.personalaccount.model.enumerated.TypeEnum;
 import com.g2.personalaccount.repositories.AccountConfirmationRepository;
 import com.g2.personalaccount.repositories.AccountRepository;
 import com.g2.personalaccount.repositories.TransactionRepository;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.Optional;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -33,6 +36,7 @@ public class TransactionAspect {
   private TransactionRepository transactionRepository;
   private AccountRepository accountRepository;
   private AccountConfirmationRepository accountConfirmationRepository;
+  private TypeEnum type;
 
   public TransactionAspect(
       TransactionRepository transactionRepository,
@@ -62,7 +66,8 @@ public class TransactionAspect {
       final long executionTime = System.currentTimeMillis() - start;
 
       Transaction transaction = new Transaction();
-      transaction.setType(transactionLogging.value());
+      type = transactionLogging.value();
+      transaction.setType(type);
       transaction.setElapsedSeconds((int) executionTime);
       transaction.setErrorMessage(message);
       transaction.setStatus(status);
@@ -70,6 +75,18 @@ public class TransactionAspect {
       Account foundAccount = retrieveAccount(joinPoint, proceed);
 
       transaction.setAccount(foundAccount);
+
+      if (type.equals(TypeEnum.CHECKS)
+          || type.equals(TypeEnum.DEBIT)
+          || type.equals(TypeEnum.WITHDRAWAL)) {
+        MoneyMovementRequest request = (MoneyMovementRequest) joinPoint.getArgs()[0];
+        transaction.setDescription(request.getDescription());
+        transaction.setAmount(request.getAmount().multiply(new BigDecimal(-1)));
+      } else if (type.equals(TypeEnum.DEPOSIT)) {
+        MoneyMovementRequest request = (MoneyMovementRequest) joinPoint.getArgs()[0];
+        transaction.setDescription(request.getDescription());
+        transaction.setAmount(request.getAmount());
+      }
 
       transaction = transactionRepository.save(transaction);
 

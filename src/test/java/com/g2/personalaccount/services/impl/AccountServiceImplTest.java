@@ -103,7 +103,10 @@ public class AccountServiceImplTest {
             emailProxy,
             pinGenerator,
             serviceConfig,
-            editionValidator);
+            editionValidator,
+            null,
+            null,
+            null);
 
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     validator = factory.getValidator();

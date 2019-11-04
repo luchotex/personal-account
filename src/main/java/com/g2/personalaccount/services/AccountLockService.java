@@ -7,4 +7,6 @@ package com.g2.personalaccount.services;
 public interface AccountLockService {
 
   void lockAccount(Long accountNumber, String threadName);
+
+  void releaseAccount(Long accountNumber, String threadName);
 }
