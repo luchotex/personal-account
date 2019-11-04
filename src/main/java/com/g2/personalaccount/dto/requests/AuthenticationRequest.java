@@ -15,6 +15,5 @@ public class AuthenticationRequest {
 
   @NotNull(message = "PIN must have a value")
   @NotEmpty(message = "PIN cannot be empty")
-  // TODO add on readme that is necessary to be used in md5 encrypting
   private String pin;
 }

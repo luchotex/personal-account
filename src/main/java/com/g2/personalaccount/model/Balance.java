@@ -27,8 +27,6 @@ import lombok.Data;
     })
 public class Balance extends EditionDates {
 
-  // TODO to be defined in future issue
-
   @Id
   @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "balance_generator")
   @SequenceGenerator(
