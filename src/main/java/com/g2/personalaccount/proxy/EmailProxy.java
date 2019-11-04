@@ -27,7 +27,7 @@ public class EmailProxy {
         toEmail,
         "IMPORTANT: Account creation confirmation",
         String.format(
-            "G2 Bank Pin confirm your creation in the following URL: %s/creation-confirmation/%s",
+            "G2 Bank confirm your creation in the following URL: %s/creation-confirmation/%s",
             url, confirmId));
   }
 

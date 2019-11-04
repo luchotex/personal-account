@@ -152,6 +152,19 @@ public class TransactionAspect {
 
     Long accountNumber = null;
     Class<?> objClass = object.getClass();
+    accountNumber = getAccountNumberFromFields(object, accountNumber, objClass);
+
+    objClass = object.getClass().getSuperclass();
+
+    if (Objects.isNull(accountNumber) && objClass.getPackage().getName().contains("com.g2")) {
+      accountNumber = getAccountNumberFromFields(object, accountNumber, objClass);
+    }
+
+    return accountNumber;
+  }
+
+  private Long getAccountNumberFromFields(Object object, Long accountNumber, Class<?> objClass)
+      throws IllegalAccessException {
     Field[] fields = objClass.getDeclaredFields();
 
     for (Field field : fields) {
