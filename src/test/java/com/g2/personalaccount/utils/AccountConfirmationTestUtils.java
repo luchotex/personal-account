@@ -13,8 +13,7 @@ import java.time.LocalDateTime;
  */
 public class AccountConfirmationTestUtils {
 
-  private AccountConfirmationTestUtils() {
-  }
+  private AccountConfirmationTestUtils() {}
 
   public static AccountConfirmation createAccountConfirmation() {
     AccountConfirmation confirmation = new AccountConfirmation();

@@ -12,5 +12,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AccountLockRepository extends CrudRepository<AccountLock, Long> {
 
-  Optional<AccountLock> findByAccount_Id(Long accountId);
+  Optional<AccountLock> findByAccount_Id(Long accountNumber);
+
+  void deleteByAccount_IdAndThreadName(Long accountNumber, String threadName);
 }

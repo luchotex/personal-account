@@ -4,9 +4,12 @@ import com.g2.personalaccount.dto.requests.AccountCloseRequest;
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
 import com.g2.personalaccount.dto.requests.AuthenticationRequest;
+import com.g2.personalaccount.dto.requests.ExternalMoneyMovementRequest;
+import com.g2.personalaccount.dto.requests.MoneyMovementRequest;
 import com.g2.personalaccount.dto.responses.AccountCloseResponse;
 import com.g2.personalaccount.dto.responses.AccountResponse;
 import com.g2.personalaccount.dto.responses.AuthenticationResponse;
+import com.g2.personalaccount.dto.responses.MoneyMovementResponse;
 
 /**
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
@@ -23,4 +26,12 @@ public interface AccountService {
   // TODO implement java doc
 
   AccountCloseResponse close(AccountCloseRequest request);
+
+  MoneyMovementResponse deposit(MoneyMovementRequest request);
+
+  MoneyMovementResponse withDrawal(MoneyMovementRequest request);
+
+  MoneyMovementResponse debit(ExternalMoneyMovementRequest request);
+
+  MoneyMovementResponse checkCharge(ExternalMoneyMovementRequest request);
 }

@@ -6,7 +6,6 @@ import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_NU
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_SSN_ON_CONFIRMATION;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_WITH_SAME_EMAIL_EXISTS;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.ACCOUNT_WITH_SAME_SSN_EXIST;
-import static com.g2.personalaccount.services.impl.AccountServiceImpl.ALREADY_CLOSED_ACCOUNT;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.EMAIL_ALREADY_EXISTS_IN_ANOTHER_ACCOUNT;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.IS_NOT_AUTHENTICATED_TO_PERFORM_THIS_OPERATION;
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.PIN_IS_INCORRECT;
@@ -14,7 +13,6 @@ import static com.g2.personalaccount.services.impl.AccountServiceImpl.THE_ACCOUN
 import static com.g2.personalaccount.services.impl.AccountServiceImpl.THE_ACCOUNT_NUMBER_IS_ON_CONFIRMATION;
 
 import com.g2.personalaccount.config.ServiceConfig;
-import com.g2.personalaccount.dto.requests.AccountCloseRequest;
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
 import com.g2.personalaccount.dto.requests.AuthenticationRequest;

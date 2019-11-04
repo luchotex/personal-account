@@ -4,10 +4,13 @@ import com.g2.personalaccount.dto.requests.AccountCloseRequest;
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
 import com.g2.personalaccount.dto.requests.AuthenticationRequest;
+import com.g2.personalaccount.dto.requests.ExternalMoneyMovementRequest;
+import com.g2.personalaccount.dto.requests.MoneyMovementRequest;
 import com.g2.personalaccount.dto.responses.AccountCloseResponse;
 import com.g2.personalaccount.dto.responses.AccountLastTransactionsResponse;
 import com.g2.personalaccount.dto.responses.AccountResponse;
 import com.g2.personalaccount.dto.responses.AuthenticationResponse;
+import com.g2.personalaccount.dto.responses.MoneyMovementResponse;
 import com.g2.personalaccount.services.AccountService;
 import com.g2.personalaccount.services.TransactionService;
 import javax.validation.Valid;
@@ -69,5 +72,29 @@ public class AccountController {
       @PathVariable("accountNumber") @NotNull Long accountNumber) {
     return new ResponseEntity<>(
         transactionService.retrieveLastTransactions(accountNumber), HttpStatus.OK);
+  }
+
+  @PostMapping(value = "/deposit")
+  public ResponseEntity<MoneyMovementResponse> deposit(
+      @RequestBody @Valid MoneyMovementRequest request) {
+    return new ResponseEntity<>(accountService.deposit(request), HttpStatus.OK);
+  }
+
+  @PostMapping(value = "/withdrawal")
+  public ResponseEntity<MoneyMovementResponse> withdrawal(
+      @RequestBody @Valid MoneyMovementRequest request) {
+    return new ResponseEntity<>(accountService.withDrawal(request), HttpStatus.OK);
+  }
+
+  @PostMapping(value = "/check-charge")
+  public ResponseEntity<MoneyMovementResponse> checkCharge(
+      @RequestBody @Valid ExternalMoneyMovementRequest request) {
+    return new ResponseEntity<>(accountService.checkCharge(request), HttpStatus.OK);
+  }
+
+  @PostMapping(value = "/debit")
+  public ResponseEntity<MoneyMovementResponse> debit(
+      @RequestBody @Valid ExternalMoneyMovementRequest request) {
+    return new ResponseEntity<>(accountService.debit(request), HttpStatus.OK);
   }
 }

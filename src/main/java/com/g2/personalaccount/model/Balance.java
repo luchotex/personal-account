@@ -20,7 +20,11 @@ import lombok.Data;
  */
 @Data
 @Entity
-@Table(indexes = {@Index(name = "idx_account_balance", columnList = "account_id")})
+@Table(
+    indexes = {
+      @Index(name = "idx_account_balance", columnList = "account_id"),
+      @Index(name = "idx_locking_thread_name", columnList = "locking_thread_name")
+    })
 public class Balance extends EditionDates {
 
   // TODO to be defined in future issue
@@ -36,6 +40,9 @@ public class Balance extends EditionDates {
 
   @Column(name = "amount")
   private BigDecimal amount;
+
+  @Column(name = "locking_thread_name")
+  private String lockingThreadName;
 
   @Column(name = "locking_date_time")
   private LocalDateTime lockingDateTime;

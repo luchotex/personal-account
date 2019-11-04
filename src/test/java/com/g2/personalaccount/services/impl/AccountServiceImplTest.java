@@ -41,7 +41,10 @@ import com.g2.personalaccount.model.Account;
 import com.g2.personalaccount.model.enumerated.StatusEnum;
 import com.g2.personalaccount.proxy.EmailProxy;
 import com.g2.personalaccount.repositories.AccountRepository;
+import com.g2.personalaccount.repositories.BalanceRepository;
+import com.g2.personalaccount.services.AccountLockService;
 import com.g2.personalaccount.services.AccountService;
+import com.g2.personalaccount.services.BalanceService;
 import com.g2.personalaccount.utils.AccountTestUtils;
 import com.g2.personalaccount.utils.PinGenerator;
 import com.g2.personalaccount.validators.EditionValidator;
@@ -56,6 +59,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -91,6 +95,9 @@ public class AccountServiceImplTest {
   @Autowired private ServiceConfig serviceConfig;
   private Validator validator;
   private EditionValidator editionValidator;
+  @MockBean private BalanceRepository balanceRepository;
+  @MockBean private BalanceService balanceService;
+  @MockBean private AccountLockService accountLockService;
 
   @Before
   public void setUp() {
@@ -103,7 +110,10 @@ public class AccountServiceImplTest {
             emailProxy,
             pinGenerator,
             serviceConfig,
-            editionValidator);
+            editionValidator,
+            balanceRepository,
+            balanceService,
+            accountLockService);
 
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     validator = factory.getValidator();

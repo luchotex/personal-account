@@ -6,19 +6,28 @@ import com.g2.personalaccount.dto.requests.AccountCloseRequest;
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
 import com.g2.personalaccount.dto.requests.AuthenticationRequest;
+import com.g2.personalaccount.dto.requests.ExternalMoneyMovementRequest;
+import com.g2.personalaccount.dto.requests.MoneyMovementRequest;
 import com.g2.personalaccount.dto.responses.AccountCloseResponse;
 import com.g2.personalaccount.dto.responses.AccountResponse;
 import com.g2.personalaccount.dto.responses.AuthenticationResponse;
+import com.g2.personalaccount.dto.responses.MoneyMovementResponse;
 import com.g2.personalaccount.model.Account;
+import com.g2.personalaccount.model.Balance;
 import com.g2.personalaccount.model.enumerated.StatusEnum;
 import com.g2.personalaccount.model.enumerated.TypeEnum;
 import com.g2.personalaccount.proxy.EmailProxy;
 import com.g2.personalaccount.repositories.AccountRepository;
+import com.g2.personalaccount.repositories.BalanceRepository;
+import com.g2.personalaccount.services.AccountLockService;
 import com.g2.personalaccount.services.AccountService;
+import com.g2.personalaccount.services.BalanceService;
 import com.g2.personalaccount.transaction.TransactionLogging;
 import com.g2.personalaccount.utils.PinGenerator;
 import com.g2.personalaccount.validators.EditionValidator;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +66,9 @@ public class AccountServiceImpl implements AccountService {
   private PinGenerator pinGenerator;
   private ServiceConfig serviceConfig;
   private EditionValidator editionValidator;
+  private BalanceRepository balanceRepository;
+  private BalanceService balanceService;
+  private AccountLockService accountLockService;
 
   public AccountServiceImpl(
       AccountMapper accountMapper,
@@ -64,13 +76,19 @@ public class AccountServiceImpl implements AccountService {
       EmailProxy emailProxy,
       PinGenerator pinGenerator,
       ServiceConfig serviceConfig,
-      EditionValidator editionValidator) {
+      EditionValidator editionValidator,
+      BalanceRepository balanceRepository,
+      BalanceService balanceService,
+      AccountLockService accountLockService) {
     this.accountMapper = accountMapper;
     this.accountRepository = accountRepository;
     this.emailProxy = emailProxy;
     this.pinGenerator = pinGenerator;
     this.serviceConfig = serviceConfig;
     this.editionValidator = editionValidator;
+    this.balanceRepository = balanceRepository;
+    this.balanceService = balanceService;
+    this.accountLockService = accountLockService;
   }
 
   @Override
@@ -130,6 +148,10 @@ public class AccountServiceImpl implements AccountService {
   @Override
   @TransactionLogging(TypeEnum.AUTHENTICATE)
   public AuthenticationResponse authenticateAccount(AuthenticationRequest request) {
+
+    List<Balance> balances =
+        balanceRepository.retrieveBalances(request.getAccountNumber(), new BigDecimal(10));
+
     Optional<Account> foundAccountOptional = accountRepository.findById(request.getAccountNumber());
 
     Account foundAccount = editionValidator.validateAuthentication(request, foundAccountOptional);
@@ -160,6 +182,109 @@ public class AccountServiceImpl implements AccountService {
     foundAccount.setStatus(StatusEnum.INACTIVE);
     accountRepository.save(foundAccount);
 
+    // TODO complete response
     return new AccountCloseResponse();
+  }
+
+  @Override
+  @TransactionLogging(TypeEnum.DEPOSIT)
+  public MoneyMovementResponse deposit(MoneyMovementRequest request) {
+
+    Optional<Account> foundAccountOptional = accountRepository.findById(request.getAccountNumber());
+
+    Account foundAccount =
+        editionValidator.validateAccount(
+            foundAccountOptional, request.getAccountNumber(), THE_ACCOUNT_IS_CLOSED);
+
+    String threadName = Thread.currentThread().getName();
+
+    try {
+      accountLockService.lockAccount(request.getAccountNumber(), threadName);
+
+      balanceService.addBalances(request.getAmount(), foundAccount);
+    } finally {
+      balanceService.releaseBalances(threadName);
+      accountLockService.releaseAccount(request.getAccountNumber(), threadName);
+    }
+
+    return new MoneyMovementResponse();
+  }
+
+  @Override
+  @TransactionLogging(TypeEnum.WITHDRAWAL)
+  public MoneyMovementResponse withDrawal(MoneyMovementRequest request) {
+
+    Optional<Account> foundAccountOptional = accountRepository.findById(request.getAccountNumber());
+
+    Account foundAccount =
+        editionValidator.validateAccount(
+            foundAccountOptional, request.getAccountNumber(), THE_ACCOUNT_IS_CLOSED);
+
+    String threadName = Thread.currentThread().getName();
+
+    performPayment(request, threadName);
+
+    return new MoneyMovementResponse();
+  }
+
+  private void performPayment(MoneyMovementRequest request, String threadName) {
+    try {
+      accountLockService.lockAccount(request.getAccountNumber(), threadName);
+
+      List<Balance> balances =
+          balanceService.getAndLockBalances(
+              request.getAccountNumber(), request.getAmount(), threadName);
+
+      balanceService.substractBalances(balances, request.getAmount());
+    } finally {
+      balanceService.releaseBalances(threadName);
+      accountLockService.releaseAccount(request.getAccountNumber(), threadName);
+    }
+  }
+
+  @Override
+  @TransactionLogging(TypeEnum.DEBIT)
+  public MoneyMovementResponse debit(ExternalMoneyMovementRequest request) {
+
+    Optional<Account> foundAccountOptional = accountRepository.findById(request.getAccountNumber());
+
+    Account foundAccount =
+        editionValidator.validateAccount(
+            foundAccountOptional, request.getAccountNumber(), THE_ACCOUNT_IS_CLOSED);
+
+    AuthenticationRequest authenticationRequest = new AuthenticationRequest();
+    authenticationRequest.setAccountNumber(request.getAccountNumber());
+    authenticationRequest.setPin(request.getPin());
+
+    authenticateAccount(authenticationRequest);
+
+    String threadName = Thread.currentThread().getName();
+
+    performPayment(request, threadName);
+
+    return new MoneyMovementResponse();
+  }
+
+  @Override
+  @TransactionLogging(TypeEnum.CHECKS)
+  public MoneyMovementResponse checkCharge(ExternalMoneyMovementRequest request) {
+
+    Optional<Account> foundAccountOptional = accountRepository.findById(request.getAccountNumber());
+
+    Account foundAccount =
+        editionValidator.validateAccount(
+            foundAccountOptional, request.getAccountNumber(), THE_ACCOUNT_IS_CLOSED);
+
+    AuthenticationRequest authenticationRequest = new AuthenticationRequest();
+    authenticationRequest.setAccountNumber(request.getAccountNumber());
+    authenticationRequest.setPin(request.getPin());
+
+    authenticateAccount(authenticationRequest);
+
+    String threadName = Thread.currentThread().getName();
+
+    performPayment(request, threadName);
+
+    return new MoneyMovementResponse();
   }
 }

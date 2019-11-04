@@ -12,11 +12,14 @@ import com.g2.personalaccount.services.AccountLockService;
 import com.g2.personalaccount.validators.EditionValidator;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Luis M. Kupferberg Ruiz (lkupferberg@overactive.com)
  * @created 2019-11-04 08:13
  */
+@Service
 public class AccountLockServiceImpl implements AccountLockService {
 
   public static final String ACCOUNT_TRANSFERING_LOCKED =
@@ -39,6 +42,7 @@ public class AccountLockServiceImpl implements AccountLockService {
   }
 
   @Override
+  @Transactional
   public void lockAccount(Long accountNumber, String threadName) {
 
     Optional<Account> optionalAccount = accountRepository.findById(accountNumber);
@@ -67,6 +71,12 @@ public class AccountLockServiceImpl implements AccountLockService {
             String.format(ACCOUNT_TRANSFERING_LOCKED, accountNumber));
       }
     }
+  }
+
+  @Override
+  @Transactional
+  public void releaseAccount(Long accountNumber, String threadName) {
+    accountLockRepository.deleteByAccount_IdAndThreadName(accountNumber, threadName);
   }
 
   private LocalDateTime getExpirationLocalDateTime() {
