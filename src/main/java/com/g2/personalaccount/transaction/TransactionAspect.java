@@ -110,9 +110,9 @@ public class TransactionAspect {
   }
 
   private Account retrieveAccountFromConfirmation(Account foundAccount, Object request) {
-    if (request instanceof String) {
+    if (Objects.nonNull(request) && request instanceof String) {
       String confirmationId = (String) request;
-      if (Objects.nonNull(confirmationId) && confirmationId.length() == UUID_LENGTH) {
+      if (confirmationId.length() == UUID_LENGTH) {
         Optional<AccountConfirmation> accountConfirmationOptional =
             accountConfirmationRepository.findByConfirmationId(confirmationId);
         if (accountConfirmationOptional.isPresent()) {
@@ -137,6 +137,7 @@ public class TransactionAspect {
       if (field.getName().equals(ACCOUNT_NUMBER_FIELD_NAME)) {
         accountNumber = (Long) field.get(object);
       }
+      field.setAccessible(false);
     }
     return accountNumber;
   }
