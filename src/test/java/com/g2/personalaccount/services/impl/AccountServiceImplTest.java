@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 
 import com.g2.personalaccount.config.ServiceConfig;
 import com.g2.personalaccount.dto.mappers.AccountMapper;
+import com.g2.personalaccount.dto.mappers.AuthenticationMapper;
 import com.g2.personalaccount.dto.requests.AccountCloseRequest;
 import com.g2.personalaccount.dto.requests.AccountRequest;
 import com.g2.personalaccount.dto.requests.AccountUpdateRequest;
@@ -97,6 +98,7 @@ public class AccountServiceImplTest {
   @MockBean private BalanceRepository balanceRepository;
   @MockBean private BalanceService balanceService;
   @MockBean private AccountLockService accountLockService;
+  @Autowired private AuthenticationMapper authenticationMapper;
 
   @Before
   public void setUp() {
@@ -112,7 +114,8 @@ public class AccountServiceImplTest {
             editionValidator,
             balanceRepository,
             balanceService,
-            accountLockService);
+            accountLockService,
+            authenticationMapper);
 
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     validator = factory.getValidator();
